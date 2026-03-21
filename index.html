@@ -127,6 +127,27 @@
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         
+        /* Patient Nav Scrollbar */
+        .patient-nav-scroll {
+            overflow-x: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 transparent;
+        }
+        .patient-nav-scroll::-webkit-scrollbar {
+            height: 8px;
+        }
+        .patient-nav-scroll::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        .patient-nav-scroll::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 4px;
+        }
+        .patient-nav-scroll::-webkit-scrollbar-thumb:hover {
+            background-color: #94a3b8;
+        }
+        
         /* Table enhancements */
         tbody tr { transition: background-color 0.15s; }
         tbody tr:hover { background-color: rgba(255, 255, 255, 0.6) !important; }
@@ -246,7 +267,6 @@
                             <p id="dashboard-subtitle" class="text-slate-600 font-medium mt-1">ภาพรวมผู้ป่วยรับใหม่และการเฝ้าระวังความเสี่ยง</p>
                         </div>
                         <div class="flex gap-2 w-full md:w-auto">
-                            <!-- SYNC BUTTON TEXT CHANGED TO "ดึงรายชื่อผู้ป่วยทั้งหมด (Sync all)" -->
                             <button onclick="window.syncAllPatientsFromSheet()" class="btn-secondary text-sm shadow-md flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white border border-white/30 flex-1 md:flex-none transition-transform hover:-translate-y-1">
                                 <span class="icon-3d text-lg drop-shadow">🔄</span> <span class="font-bold drop-shadow">ดึงรายชื่อผู้ป่วยทั้งหมด (Sync all)</span>
                             </button>
@@ -307,7 +327,6 @@
                             <p class="text-slate-600 font-medium mt-1">ตรวจสอบสถานะเตียงว่าง และข้อมูลผู้ป่วยเบื้องต้น</p>
                         </div>
                         <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full md:w-auto">
-                            <!-- SYNC BUTTON TEXT CHANGED TO "ดึงรายชื่อผู้ป่วยทั้งหมด (Sync all)" -->
                             <button onclick="window.syncAllPatientsFromSheet()" class="btn-secondary text-sm shadow-md flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white border border-white/30 w-full sm:w-auto transition-transform hover:-translate-y-1">
                                 <span class="icon-3d text-lg drop-shadow">🔄</span> <span class="font-bold drop-shadow">ดึงรายชื่อผู้ป่วยทั้งหมด (Sync all)</span>
                             </button>
@@ -1247,21 +1266,15 @@
 
         window.setActiveAssessor = (name) => {
             window.currentActiveAssessor = name;
-            
-            // Update UI Elements
             const dEl = document.getElementById('active-user-name-desktop');
             const mEl = document.getElementById('active-user-name-mobile');
             if(dEl) dEl.textContent = name;
             if(mEl) mEl.textContent = name;
-            
             showToast(`เข้าสู่ระบบในชื่อ: ${name}`, 'success');
-            
-            // Update form display if currently rendering an assessment
             const displayEl = document.getElementById('asmnt-assessor-display');
             if (displayEl) {
                 displayEl.innerHTML = `<span class="text-blue-700 font-bold text-base drop-shadow-sm"><span class="icon-3d">🧑‍⚕️</span> ${name}</span>`;
             }
-
             closeModal();
         };
 
@@ -1324,7 +1337,6 @@
         window.showDashboard = (type) => {
             window.currentDashboardView = type;
             
-            // Hide all pages first
             document.getElementById('page-home').classList.add('hidden');
             document.getElementById('page-assessment').classList.add('hidden');
             const bedPage = document.getElementById('page-bed-overview');
@@ -1357,7 +1369,6 @@
                 return; 
             }
 
-            // Restore Home Page for dashboard views
             document.getElementById('page-home').classList.remove('hidden');
 
             const sections = ['class', 'fall', 'aws', 'braden'];
@@ -1389,7 +1400,6 @@
                 if(subtitleEl) subtitleEl.textContent = 'จัดการรายชื่อผู้ป่วยและบันทึกคะแนน';
             }
             
-            // Trigger UI update using current list without needing to refetch
             renderPatientTables(type === 'discharged');
         };
 
@@ -1430,22 +1440,19 @@
             document.getElementById('appModal').style.display = 'block';
         }
 
-        // Navigation Next Patient
+        // --- Patient Flow ---
         window.goToNextPatient = () => {
             if(!currentAssessmentType || !currentPatientData) return;
             const list = window.allPatientsList.filter(p => {
                 const isDischargedView = window.currentDashboardView === 'discharged';
                 const pStatus = p.status || 'Admit อยู่';
                 const statusMatch = (isDischargedView && pStatus === 'จำหน่ายแล้ว') || (!isDischargedView && pStatus === 'Admit อยู่');
-                
                 if (!statusMatch) return false;
                 if (currentAssessmentType === 'aws' && !p.enrolledAws) return false;
                 if (currentAssessmentType === 'braden' && !p.enrolledBraden) return false;
                 return true;
             });
-            
             if (!list || list.length === 0) return;
-            
             const currentIndex = list.findIndex(p => p.id === currentPatientData.id);
             if (currentIndex !== -1 && currentIndex < list.length - 1) {
                 const nextPatient = list[currentIndex + 1];
@@ -1460,7 +1467,6 @@
                 const isDischargedView = window.currentDashboardView === 'discharged';
                 const pStatus = p.status || 'Admit อยู่';
                 const statusMatch = (isDischargedView && pStatus === 'จำหน่ายแล้ว') || (!isDischargedView && pStatus === 'Admit อยู่');
-                
                 if (!statusMatch) return false;
                 if (currentAssessmentType === 'aws' && !p.enrolledAws) return false;
                 if (currentAssessmentType === 'braden' && !p.enrolledBraden) return false;
@@ -1468,7 +1474,7 @@
             });
 
             if(list.length === 0) return '';
-            let html = '<div class="flex overflow-x-auto gap-2 mb-4 pb-2 scrollbar-hide">';
+            let html = '<div class="flex overflow-x-auto gap-2 mb-4 pb-2 patient-nav-scroll">';
             list.forEach(p => {
                 const isActive = p.id === currentId;
                 const bed = p.bed || 'N/A';
@@ -1482,35 +1488,27 @@
             return html;
         }
 
-        // --- Data Loading Unified ---
         function loadPatientTablesOnHome(isDischarged = false) {
             if (!auth.currentUser) return;
-            
-            // Unsubscribe from previous unified listener if exists
             if (unsubscribes['patients']) unsubscribes['patients']();
             
             const q = query(collection(db, `artifacts/${appId}/public/data/patients`));
-            
             unsubscribes['patients'] = onSnapshot(q, (snapshot) => {
                 let patients = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
-                
-                // Sort by bed number first, then name
                 patients.sort((a, b) => {
                     const bedA = a.bed || ''; const bedB = b.bed || '';
                     if(bedA !== bedB) return bedA.localeCompare(bedB, undefined, {numeric: true});
                     return (a.name || '').localeCompare(b.name || '');
                 });
-                
                 window.allPatientsList = patients;
                 
-                // Update Dashboard stats globally
                 let statTotal = 0, statFall = 0, statAws = 0, statBraden = 0;
                 patients.forEach(p => {
                     if (p.status === 'Admit อยู่') {
                         statTotal++;
                         if (p.fall_latestScore >= 5) statFall++;
-                        if (p.enrolledAws) statAws++; // นับทุกคนที่ถูกดึงเข้าตาราง AWS
-                        if (p.enrolledBraden) statBraden++; // นับทุกคนที่ถูกดึงเข้าตาราง Braden
+                        if (p.enrolledAws) statAws++; 
+                        if (p.enrolledBraden) statBraden++; 
                     }
                 });
                 
@@ -1519,15 +1517,12 @@
                 if(document.getElementById('stat-aws-risk')) document.getElementById('stat-aws-risk').textContent = statAws;
                 if(document.getElementById('stat-braden-risk')) document.getElementById('stat-braden-risk').textContent = statBraden;
 
-                // Decide which status we are currently viewing
                 const viewingDischarged = window.currentDashboardView === 'discharged';
                 renderPatientTables(viewingDischarged);
                 
-                // Real-time update for bed overview if currently on that page
                 if (window.currentDashboardView === 'bed-overview') {
                     window.renderBedOverview();
                 }
-
             }, (error) => console.error(`Error loading unified patients:`, error));
         }
 
@@ -1535,20 +1530,14 @@
             const container = document.getElementById('bed-grid-container');
             if (!container) return;
             container.innerHTML = '';
-
             const activePatients = window.allPatientsList.filter(p => p.status === 'Admit อยู่');
-
             bedLayoutConfig.forEach(bedNum => {
-                // Find if a patient occupies this exact bed string
                 const patient = activePatients.find(p => p.bed && String(p.bed).trim() === bedNum);
-
                 if (patient) {
-                    // Risk Indicators
                     let riskDots = '';
                     if (patient.fall_latestScore >= 5) riskDots += '<span title="เสี่ยงหกล้มสูง" class="w-3 h-3 rounded-full bg-red-500 shadow-sm border border-white"></span>';
                     if (patient.enrolledAws && patient.aws_latestScore >= 10) riskDots += '<span title="ถอนพิษสุรารุนแรง" class="w-3 h-3 rounded-full bg-blue-600 shadow-sm border border-white"></span>';
                     if (patient.enrolledBraden && patient.braden_latestScore > 0 && patient.braden_latestScore <= 12) riskDots += '<span title="แผลกดทับเสี่ยงสูง" class="w-3 h-3 rounded-full bg-teal-500 shadow-sm border border-white"></span>';
-
                     container.innerHTML += `
                         <div class="glass rounded-xl shadow-sm p-4 flex flex-col items-center justify-center cursor-pointer hover:shadow-md hover:border-blue-400 hover:bg-white/80 transition-all hover:-translate-y-1 relative overflow-hidden group" onclick="window.openBedActionModal('${patient.id}')">
                             <div class="absolute top-0 left-0 w-full h-1.5 bg-blue-500 group-hover:bg-blue-600 transition-colors opacity-80"></div>
@@ -1556,15 +1545,13 @@
                             <div class="text-sm font-extrabold text-slate-800 text-center w-full truncate mb-1 drop-shadow-sm" title="${patient.name}">${patient.name}</div>
                             <div class="text-[11px] font-bold text-slate-600 bg-white/50 backdrop-blur px-2 py-0.5 rounded-md border border-white/60">HN: ${patient.hn}</div>
                             <div class="absolute bottom-2 right-2 flex gap-1">${riskDots}</div>
-                        </div>
-                    `;
+                        </div>`;
                 } else {
                     container.innerHTML += `
                         <div class="bg-white/30 backdrop-blur-sm rounded-xl border-2 border-white/50 border-dashed p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-blue-50/50 hover:border-blue-300 transition-all group h-[120px]" onclick="window.openPatientModalTemplate('${bedNum}')">
                             <div class="text-3xl font-extrabold text-slate-400 group-hover:text-blue-400 transition-colors mb-1 drop-shadow-sm">${bedNum}</div>
                             <div class="text-xs font-bold text-slate-500 glass px-3 py-1 rounded-full flex items-center gap-1 group-hover:text-blue-600 group-hover:border-blue-200"><span class="text-lg leading-none">+</span> ว่าง</div>
-                        </div>
-                    `;
+                        </div>`;
                 }
             });
         };
@@ -1572,9 +1559,7 @@
         window.openBedActionModal = (pid) => {
             const p = window.allPatientsList.find(x => x.id === pid);
             if(!p) return;
-
             document.getElementById('modal-title').innerHTML = `<span class="text-slate-800 flex items-center gap-2 drop-shadow-sm"><span class="icon-3d">🛏️</span> จัดการผู้ป่วยเตียง ${p.bed||'-'}</span>`;
-
             let html = `
                 <div class="bg-white/50 p-5 rounded-xl mb-6 text-center border border-white/80 shadow-inner backdrop-blur-md">
                     <div class="text-2xl font-extrabold text-slate-800 mb-1 drop-shadow-sm">${p.name}</div>
@@ -1583,28 +1568,22 @@
                 <h4 class="font-bold text-slate-700 mb-3 uppercase tracking-wide text-sm border-b border-slate-200/50 pb-2 drop-shadow-sm">📋 เลือกทำรายการ</h4>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
                     <button class="w-full flex items-center gap-2 justify-center py-3 bg-purple-50/80 text-purple-700 border border-purple-200/60 rounded-xl font-bold shadow-sm hover:bg-purple-100 hover:border-purple-300 transition-colors backdrop-blur-sm" onclick="window.selectPatient('${pid}', 'class'); window.closeModal();"><span class="icon-3d text-lg">🗂️</span> ประเมินจำแนกประเภท</button>
-
                     <button class="w-full flex items-center gap-2 justify-center py-3 bg-orange-50/80 text-orange-700 border border-orange-200/60 rounded-xl font-bold shadow-sm hover:bg-orange-100 hover:border-orange-300 transition-colors backdrop-blur-sm" onclick="window.selectPatient('${pid}', 'fall'); window.closeModal();"><span class="icon-3d text-lg">⚠️</span> ประเมินหกล้ม</button>
             `;
-
             if(p.enrolledAws) {
                 html += `<button class="w-full flex items-center gap-2 justify-center py-3 bg-blue-50/80 text-blue-700 border border-blue-200/60 rounded-xl font-bold shadow-sm hover:bg-blue-100 hover:border-blue-300 transition-colors backdrop-blur-sm" onclick="window.selectPatient('${pid}', 'aws'); window.closeModal();"><span class="icon-3d text-lg">🍷</span> ประเมิน AWS</button>`;
             } else {
                 html += `<button class="w-full flex items-center gap-2 justify-center py-3 bg-white/40 text-slate-400 border border-white/60 rounded-xl font-bold shadow-sm cursor-not-allowed backdrop-blur-sm" disabled title="ไม่ได้ถูกนำเข้าในตารางประเมิน AWS"><span class="icon-3d text-lg grayscale opacity-50">🍷</span> ไม่ได้เข้าร่วม AWS</button>`;
             }
-
             if(p.enrolledBraden) {
                 html += `<button class="w-full flex items-center gap-2 justify-center py-3 bg-teal-50/80 text-teal-700 border border-teal-200/60 rounded-xl font-bold shadow-sm hover:bg-teal-100 hover:border-teal-300 transition-colors backdrop-blur-sm" onclick="window.selectPatient('${pid}', 'braden'); window.closeModal();"><span class="icon-3d text-lg">🛏️</span> ประเมิน Braden</button>`;
             } else {
                 html += `<button class="w-full flex items-center gap-2 justify-center py-3 bg-white/40 text-slate-400 border border-white/60 rounded-xl font-bold shadow-sm cursor-not-allowed backdrop-blur-sm" disabled title="ไม่ได้ถูกนำเข้าในตารางประเมิน Braden"><span class="icon-3d text-lg grayscale opacity-50">🛏️</span> ไม่ได้เข้าร่วม Braden</button>`;
             }
-
             html += `</div>
                 <div class="mt-4 pt-4 border-t border-slate-200/50">
                     <button class="w-full flex items-center gap-2 justify-center py-2.5 glass hover:bg-white/80 text-slate-700 rounded-lg shadow-sm font-semibold transition-colors" onclick="window.openPatientModal('${pid}')"><span class="icon-3d text-lg">✏️</span> แก้ไขข้อมูลพื้นฐานผู้ป่วย</button>
-                </div>
-            `;
-
+                </div>`;
             document.getElementById('modal-body').innerHTML = html;
             document.getElementById('modal-footer').innerHTML = `<button class="btn-secondary" onclick="window.closeModal()">ปิด</button>`;
             document.getElementById('appModal').style.display = 'block';
@@ -1612,12 +1591,11 @@
 
         window.openPatientModalTemplate = (bedNum) => {
             window.openPatientModal();
-            // Wait slightly for the modal to be injected into the DOM
             setTimeout(() => {
                 const bedInput = document.getElementById('modal-patient-bed');
                 if (bedInput) {
                     bedInput.value = bedNum;
-                    bedInput.classList.add('ring-2', 'ring-blue-400', 'bg-blue-50/80'); // Highlight that it's prefilled
+                    bedInput.classList.add('ring-2', 'ring-blue-400', 'bg-blue-50/80'); 
                     setTimeout(() => bedInput.classList.remove('ring-2', 'ring-blue-400', 'bg-blue-50/80'), 1500);
                 }
             }, 50);
@@ -1625,38 +1603,20 @@
 
         function renderPatientTables(isDischarged) {
             const targetStatus = isDischarged ? 'จำหน่ายแล้ว' : 'Admit อยู่';
-            const filteredPatients = window.allPatientsList.filter(p => {
-                const status = p.status || 'Admit อยู่';
-                return status === targetStatus;
-            });
-
+            const filteredPatients = window.allPatientsList.filter(p => (p.status || 'Admit อยู่') === targetStatus);
             const types = ['class', 'fall', 'aws', 'braden'];
-
-            let statTotal = 0, statFall = 0, statAws = 0, statBraden = 0;
 
             types.forEach(type => {
                 const tbody = document.getElementById(`home-${type}-body`);
                 if (!tbody) return;
                 tbody.innerHTML = '';
-
                 let count = 0;
-
                 filteredPatients.forEach(p => {
-                    
-                    if (type === 'class') { 
-                        statTotal++;
-                        if (p.fall_latestScore >= 5) statFall++;
-                        if (p.enrolledAws) statAws++; 
-                        if (p.enrolledBraden) statBraden++;
-                    }
-
                     if (type === 'aws' && !p.enrolledAws) return;
                     if (type === 'braden' && !p.enrolledBraden) return;
-                    
                     count++;
 
                     let scoreHtml = '-', nextHtml = '-';
-                    
                     const latestScore = p[`${type}_latestScore`];
                     const latestAssessmentAt = p[`${type}_latestAssessmentAt`];
                     const latestShift = p[`${type}_latestShift`];
@@ -1735,7 +1695,6 @@
             });
         }
 
-        // --- Unified Patient Management ---
         window.fetchPatientFromSheet = async () => {
             const bedNum = document.getElementById('modal-patient-bed').value.trim();
             if (!bedNum) return showToast('กรุณากรอกเลขเตียง', 'error');
@@ -1747,7 +1706,6 @@
                 const text = await response.text();
                 const data = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
                 const row = data.table.rows.find(r => r && r.c && (String(r.c[0]?.v).trim()===bedNum || String(r.c[1]?.v).trim()===bedNum));
-                
                 if (row) {
                     document.getElementById('modal-patient-hn').value = row.c[26]?.v || '';
                     document.getElementById('modal-patient-an').value = row.c[2]?.v || '';
@@ -1758,85 +1716,54 @@
             } catch (err) { showToast('ดึงข้อมูลล้มเหลว', 'error'); }
         }
 
-        // SYNC ALL PATIENTS
         window.syncAllPatientsFromSheet = async () => {
             if (!auth.currentUser) {
                 showToast("กรุณาเข้าสู่ระบบ (เลือกผู้ใช้งาน) ก่อนซิงค์ข้อมูล", "error");
                 window.openLoginModal();
                 return;
             }
-
             const sheetId = '1t0xSegQ7aXqDixeMh5kRbrrQOh_T30d7qbKeNqFhzvQ';
             const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=ชีต1`;
-            
             showToast('กำลังดึงข้อมูลทั้งหมดจาก G-Sheet...', 'info');
-            
             try {
                 const response = await fetch(url);
                 const text = await response.text();
                 const jsonText = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
                 const data = JSON.parse(jsonText);
-                
                 let syncCount = 0;
                 const batch = writeBatch(db);
                 const existingPatients = window.allPatientsList || [];
-                
                 if (data && data.table && data.table.rows) {
                     for (const row of data.table.rows) {
                         if (!row || !row.c) continue;
-                        
                         const bedVal = row.c[1]?.v;
                         const bedStr = bedVal != null ? String(bedVal).trim() : '';
-                        
                         if (bedStr !== '') {
                             const an = row.c[2]?.v != null ? String(row.c[2]?.v).trim() : '';
                             const name = row.c[3]?.v != null ? String(row.c[3]?.v).trim() : '';
                             const diagnosis = row.c[4]?.v != null ? String(row.c[4]?.v).trim() : '';
                             const hn = row.c[26]?.v != null ? String(row.c[26]?.v).trim() : '';
-                            
                             if (hn && name) {
-                                const patientData = {
-                                    bed: bedStr,
-                                    hn: hn,
-                                    an: an,
-                                    name: name,
-                                    diagnosis: diagnosis,
-                                    status: 'Admit อยู่',
-                                    updatedAt: serverTimestamp()
-                                };
-                                
+                                const patientData = { bed: bedStr, hn: hn, an: an, name: name, diagnosis: diagnosis, status: 'Admit อยู่', updatedAt: serverTimestamp() };
                                 const existing = existingPatients.find(p => p.id === hn || p.hn === hn);
                                 if (!existing) {
                                     patientData.classMode = 'adult'; 
                                     patientData.createdAt = serverTimestamp();
                                     patientData.admitDate = new Date().toISOString().split('T')[0];
                                 }
-                                
                                 const docRef = doc(db, `artifacts/${appId}/public/data/patients`, hn);
                                 batch.set(docRef, patientData, { merge: true });
                                 syncCount++;
                             }
                         }
                     }
-                    
                     if (syncCount > 0) {
                         await batch.commit();
                         showToast(`ซิงค์ข้อมูลสำเร็จ อัปเดต ${syncCount} รายการ`, 'success');
-                        
-                        if (window.currentDashboardView === 'bed-overview') {
-                            setTimeout(() => window.renderBedOverview(), 500);
-                        }
-                    } else {
-                        showToast(`ไม่พบข้อมูลผู้ป่วยที่มีการระบุเลขเตียงในชีต`, 'info');
-                    }
-                } else {
-                     showToast('รูปแบบข้อมูลจากชีตไม่ถูกต้อง', 'error');
-                }
-                
-            } catch (err) {
-                console.error("Sync error:", err);
-                showToast('ดึงข้อมูลล้มเหลว กรุณาตรวจสอบลิงก์ หรือ การแชร์ Google Sheet', 'error');
-            }
+                        if (window.currentDashboardView === 'bed-overview') setTimeout(() => window.renderBedOverview(), 500);
+                    } else showToast(`ไม่พบข้อมูลผู้ป่วยที่มีการระบุเลขเตียงในชีต`, 'info');
+                } else showToast('รูปแบบข้อมูลจากชีตไม่ถูกต้อง', 'error');
+            } catch (err) { console.error("Sync error:", err); showToast('ดึงข้อมูลล้มเหลว กรุณาตรวจสอบลิงก์', 'error'); }
         };
 
         window.openPatientModal = async (patientId = null) => {
@@ -1845,9 +1772,7 @@
                 const snap = await getDoc(doc(db, `artifacts/${appId}/public/data/patients`, patientId));
                 if (snap.exists()) data = snap.data();
             }
-            
             document.getElementById('modal-title').innerHTML = `<span class="text-slate-800 flex items-center gap-2 drop-shadow-sm"><span class="icon-3d">${patientId?'✏️':'➕'}</span> ${patientId ? 'แก้ไขข้อมูลผู้ป่วย' : 'ลงทะเบียนผู้ป่วยรับใหม่ (Admit)'}</span>`;
-            
             let html = `
                 <div class="bg-blue-50/80 border border-blue-200/60 text-blue-900 text-sm p-4 rounded-xl mb-5 shadow-sm backdrop-blur-sm">
                     <div class="font-bold flex items-center gap-1 drop-shadow-sm"><span class="text-lg">💡</span> ลงทะเบียนเพียงครั้งเดียว</div>
@@ -1856,18 +1781,15 @@
                 <div class="p-4 bg-white/40 border border-white/60 shadow-sm rounded-xl mb-5 backdrop-blur-sm">
                     <label class="block text-sm font-bold text-slate-800 mb-2 drop-shadow-sm">ดึงข้อมูลจากเตียง (ดึงรายบุคคล)</label>
                     <div class="flex gap-2"><input type="text" id="modal-patient-bed" class="form-input bg-white/70" value="${data.bed||''}" placeholder="ระบุเลขเตียง"><button type="button" class="btn-primary py-2 px-4 shadow-md whitespace-nowrap border-white/30" onclick="window.fetchPatientFromSheet()">ดึงข้อมูล</button></div>
-                </div>`;
-                
-            html += `<div class="mb-5 p-4 bg-purple-50/80 border border-purple-200/60 rounded-xl shadow-sm backdrop-blur-sm">
-                <label class="block text-sm font-bold text-purple-900 mb-1 drop-shadow-sm">เลือกรูปแบบใบประเมินแรกรับ <span class="text-red-500">*</span></label>
-                <div class="text-xs text-purple-800 mb-3 bg-purple-100/80 inline-block px-2 py-1 rounded border border-purple-200/50 shadow-sm font-medium">เมื่อเลือกแล้วจะไม่สามารถแก้ไขประเภทใบประเมินได้ในภายหลัง</div>
-                <select id="modal-patient-classmode" class="form-select font-bold text-purple-900 border-purple-300 shadow-inner text-base py-2 bg-white/70" ${data.classMode ? 'disabled' : ''}>
-                    <option value="adult" ${data.classMode==='adult'?'selected':''}>👨 ใบประเมินสำหรับ ผู้ใหญ่ (> 15 ปี)</option>
-                    <option value="child" ${data.classMode==='child'?'selected':''}>👶 ใบประเมินสำหรับ เด็ก (0 - 15 ปี)</option>
-                </select>
-            </div>`;
-
-            html += `
+                </div>
+                <div class="mb-5 p-4 bg-purple-50/80 border border-purple-200/60 rounded-xl shadow-sm backdrop-blur-sm">
+                    <label class="block text-sm font-bold text-purple-900 mb-1 drop-shadow-sm">เลือกรูปแบบใบประเมินแรกรับ <span class="text-red-500">*</span></label>
+                    <div class="text-xs text-purple-800 mb-3 bg-purple-100/80 inline-block px-2 py-1 rounded border border-purple-200/50 shadow-sm font-medium">เมื่อเลือกแล้วจะไม่สามารถแก้ไขประเภทใบประเมินได้ในภายหลัง</div>
+                    <select id="modal-patient-classmode" class="form-select font-bold text-purple-900 border-purple-300 shadow-inner text-base py-2 bg-white/70" ${data.classMode ? 'disabled' : ''}>
+                        <option value="adult" ${data.classMode==='adult'?'selected':''}>👨 ใบประเมินสำหรับ ผู้ใหญ่ (> 15 ปี)</option>
+                        <option value="child" ${data.classMode==='child'?'selected':''}>👶 ใบประเมินสำหรับ เด็ก (0 - 15 ปี)</option>
+                    </select>
+                </div>
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div><label class="text-sm font-bold text-slate-800 mb-1 block drop-shadow-sm">HN <span class="text-red-500">*</span></label><input type="text" id="modal-patient-hn" class="form-input bg-white/70" value="${data.hn||''}" ${patientId?'readonly class="form-input bg-slate-200/60 text-slate-600"':''}></div>
                     <div><label class="text-sm font-bold text-slate-800 mb-1 block drop-shadow-sm">AN</label><input type="text" id="modal-patient-an" class="form-input bg-white/70" value="${data.an||''}"></div>
@@ -1877,9 +1799,7 @@
                 <div class="grid grid-cols-2 gap-4 mb-2">
                     <div><label class="text-sm font-bold text-slate-800 mb-1 block drop-shadow-sm">สถานะปัจจุบัน</label><select id="modal-patient-status" class="form-select bg-white/70 font-bold"><option>Admit อยู่</option><option>จำหน่ายแล้ว</option></select></div>
                     <div><label class="text-sm font-bold text-slate-800 mb-1 block drop-shadow-sm">วันที่ Admit</label><input type="date" id="modal-patient-admitDate" class="form-input bg-white/70 font-bold" value="${data.admitDate||''}"></div>
-                </div>
-                `;
-            
+                </div>`;
             document.getElementById('modal-body').innerHTML = html;
             if(data.status) document.getElementById('modal-patient-status').value = data.status;
             document.getElementById('modal-footer').innerHTML = `<button class="btn-primary w-full text-lg py-3 shadow-lg flex justify-center items-center gap-2 border-white/30" onclick="window.savePatientData('${patientId||''}')"><span class="icon-3d">💾</span> บันทึกข้อมูล</button>`;
@@ -1891,24 +1811,16 @@
             const hn = document.getElementById('modal-patient-hn').value.trim();
             const name = document.getElementById('modal-patient-name').value.trim();
             if (!hn || !name) return showToast('กรุณากรอก HN และ ชื่อ-สกุล', 'error');
-            
             const data = {
                 bed: document.getElementById('modal-patient-bed').value.trim(),
-                hn, 
-                an: document.getElementById('modal-patient-an').value.trim(),
-                name,
-                diagnosis: document.getElementById('modal-patient-diagnosis').value,
+                hn, an: document.getElementById('modal-patient-an').value.trim(),
+                name, diagnosis: document.getElementById('modal-patient-diagnosis').value,
                 status: document.getElementById('modal-patient-status').value,
                 admitDate: document.getElementById('modal-patient-admitDate').value
             };
-            
             const classModeSelect = document.getElementById('modal-patient-classmode');
-            if(!classModeSelect.disabled) {
-                data.classMode = classModeSelect.value;
-            }
-
+            if(!classModeSelect.disabled) data.classMode = classModeSelect.value;
             if(!patientId) data.createdAt = serverTimestamp();
-
             try {
                 await setDoc(doc(db, `artifacts/${appId}/public/data/patients`, patientId || hn), data, { merge: true });
                 showToast('ลงทะเบียนผู้ป่วยสำเร็จ', 'success');
@@ -1919,9 +1831,7 @@
         window.openEnrollModal = (type) => {
             const targetFlag = type === 'aws' ? 'enrolledAws' : 'enrolledBraden';
             const title = type === 'aws' ? 'ถอนพิษสุรา (AWS)' : 'แผลกดทับ (Braden)';
-            
             const eligible = window.allPatientsList.filter(p => p.status !== 'จำหน่ายแล้ว' && !p[targetFlag]);
-            
             let html = `<div class="mb-4">
                 <label class="block text-sm font-bold text-slate-800 mb-2 drop-shadow-sm">เลือกรายชื่อผู้ป่วย (ดึงจากทะเบียน Admit ปัจจุบัน)</label>
                 <select id="enroll-patient-select" class="form-select text-lg py-3 border-2 border-blue-300/50 shadow-inner bg-white/70 font-bold">
@@ -1929,19 +1839,15 @@
                     ${eligible.map(p => `<option value="${p.id}">เตียง ${p.bed||'-'} | HN: ${p.hn} | ${p.name}</option>`).join('')}
                 </select>
             </div>`;
-
             if (type === 'aws') {
-                html += `
-                    <div class="mt-5 p-4 bg-blue-50/80 border border-blue-200/60 rounded-xl shadow-inner backdrop-blur-sm">
-                        <label class="block text-sm font-extrabold text-blue-900 mb-3 flex items-center gap-2 drop-shadow-sm"><span class="icon-3d text-lg">🍺</span> ประวัติการดื่มล่าสุด (สำหรับผู้ป่วยรายนี้)</label>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div><label class="text-xs font-bold text-slate-700 block mb-1 drop-shadow-sm">วันที่ดื่มล่าสุด</label><input type="date" id="enroll-lastDrinkDate" class="form-input border-blue-300/50 bg-white/80 font-bold"></div>
-                            <div><label class="text-xs font-bold text-slate-700 block mb-1 drop-shadow-sm">เวลา</label><input type="time" id="enroll-lastDrinkTime" class="form-input border-blue-300/50 bg-white/80 font-bold"></div>
-                        </div>
+                html += `<div class="mt-5 p-4 bg-blue-50/80 border border-blue-200/60 rounded-xl shadow-inner backdrop-blur-sm">
+                    <label class="block text-sm font-extrabold text-blue-900 mb-3 flex items-center gap-2 drop-shadow-sm"><span class="icon-3d text-lg">🍺</span> ประวัติการดื่มล่าสุด (สำหรับผู้ป่วยรายนี้)</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="text-xs font-bold text-slate-700 block mb-1 drop-shadow-sm">วันที่ดื่มล่าสุด</label><input type="date" id="enroll-lastDrinkDate" class="form-input border-blue-300/50 bg-white/80 font-bold"></div>
+                        <div><label class="text-xs font-bold text-slate-700 block mb-1 drop-shadow-sm">เวลา</label><input type="time" id="enroll-lastDrinkTime" class="form-input border-blue-300/50 bg-white/80 font-bold"></div>
                     </div>
-                `;
+                </div>`;
             }
-            
             if(eligible.length === 0) {
                 html = `<div class="p-6 bg-yellow-50/80 text-yellow-900 rounded-xl border border-yellow-200/60 shadow-sm text-center backdrop-blur-sm">
                     <div class="text-3xl mb-2 drop-shadow-sm">ℹ️</div>
@@ -1949,7 +1855,6 @@
                     <div class="text-sm opacity-90 font-medium">(อาจถูกนำเข้าตารางครบหมดแล้ว หรือยังไม่มีผู้ป่วย Admit ในระบบ)</div>
                 </div>`;
             }
-
             document.getElementById('modal-title').innerHTML = `<span class="icon-3d text-blue-600 drop-shadow-sm">➕</span> นำผู้ป่วยเข้าตาราง ${title}`;
             document.getElementById('modal-body').innerHTML = html;
             document.getElementById('modal-footer').innerHTML = eligible.length > 0 
@@ -1961,54 +1866,40 @@
         window.submitEnroll = async (type) => {
             const select = document.getElementById('enroll-patient-select');
             if(!select || !select.value) return showToast('กรุณาเลือกผู้ป่วย', 'error');
-            
             const pid = select.value;
             const updateData = {};
             updateData[type === 'aws' ? 'enrolledAws' : 'enrolledBraden'] = true;
-
             if (type === 'aws') {
                 updateData.lastDrinkDate = document.getElementById('enroll-lastDrinkDate')?.value || '';
                 updateData.lastDrinkTime = document.getElementById('enroll-lastDrinkTime')?.value || '';
             }
-            
             try {
                 await updateDoc(doc(db, `artifacts/${appId}/public/data/patients`, pid), updateData);
                 showToast(`เพิ่มผู้ป่วยเข้าตาราง ${type.toUpperCase()} สำเร็จ`, 'success');
                 closeModal();
-            } catch(e) {
-                showToast('เกิดข้อผิดพลาดในการนำเข้า', 'error');
-                console.error(e);
-            }
+            } catch(e) { showToast('เกิดข้อผิดพลาดในการนำเข้า', 'error'); console.error(e); }
         };
 
         window.unenrollPatient = (pid, type) => {
             const title = type === 'aws' ? 'AWS' : 'Braden';
             showConfirmationModal(`ต้องการ <b>นำผู้ป่วยออกจากตาราง ${title}</b> ใช่หรือไม่?<br><br><span class="text-sm text-slate-700 bg-white/50 backdrop-blur p-3 rounded-xl border border-white/60 block mt-2 text-left shadow-inner"><b>หมายเหตุ:</b> ข้อมูลการประเมินย้อนหลังจะยังถูกเก็บไว้ และสถานะผู้ป่วยยังคงเป็น Admit แต่ชื่อจะไม่แสดงในตารางการประเมินนี้จนกว่าจะกดเพิ่มเข้ามาใหม่</span>`, async () => {
-                const updateData = {};
-                updateData[type === 'aws' ? 'enrolledAws' : 'enrolledBraden'] = false;
+                const updateData = {}; updateData[type === 'aws' ? 'enrolledAws' : 'enrolledBraden'] = false;
                 try {
                     await updateDoc(doc(db, `artifacts/${appId}/public/data/patients`, pid), updateData);
                     showToast('นำรายชื่อออกจากตารางสำเร็จ', 'success');
-                } catch(e) {
-                    showToast('เกิดข้อผิดพลาด', 'error');
-                    console.error(e);
-                }
+                } catch(e) { showToast('เกิดข้อผิดพลาด', 'error'); console.error(e); }
             });
         };
 
         window.unenrollPatientFromAssessment = (pid, type) => {
             const title = type === 'aws' ? 'AWS' : 'Braden';
             showConfirmationModal(`ต้องการ <b>ยกเลิกการติดตามและนำออกจากตาราง ${title}</b> ใช่หรือไม่?<br><br><span class="text-sm text-slate-700 bg-white/50 backdrop-blur p-3 rounded-xl border border-white/60 block mt-2 text-left shadow-inner"><b>หมายเหตุ:</b> ข้อมูลประวัติจะยังคงอยู่ แต่ผู้ป่วยจะถูกนำออกจากแดชบอร์ด ${title}</span>`, async () => {
-                const updateData = {};
-                updateData[type === 'aws' ? 'enrolledAws' : 'enrolledBraden'] = false;
+                const updateData = {}; updateData[type === 'aws' ? 'enrolledAws' : 'enrolledBraden'] = false;
                 try {
                     await updateDoc(doc(db, `artifacts/${appId}/public/data/patients`, pid), updateData);
                     showToast(`ยกเลิกการติดตาม ${title} สำเร็จ`, 'success');
                     window.showDashboard(type); 
-                } catch(e) {
-                    showToast('เกิดข้อผิดพลาด', 'error');
-                    console.error(e);
-                }
+                } catch(e) { showToast('เกิดข้อผิดพลาด', 'error'); console.error(e); }
             });
         };
 
@@ -2016,39 +1907,157 @@
             showConfirmationModal(`ยืนยันการลบผู้ป่วย HN: <strong>${patientId}</strong> ?<br><span class="text-sm text-red-800 mt-3 block bg-red-50/80 backdrop-blur-sm p-3 rounded-xl border border-red-200/50 text-left shadow-inner">⚠️ <b>อันตราย:</b> จะเป็นการลบข้อมูลผู้ป่วยและ <b>ประวัติการประเมินทุกตาราง (Class, Fall, AWS, Braden) ทั้งหมด</b> ออกจากระบบอย่างถาวร (ไม่สามารถกู้คืนได้)</span>`, async () => {
                 try {
                     const patientRef = doc(db, `artifacts/${appId}/public/data/patients`, patientId);
-                    
                     const batch = writeBatch(db);
-                    
                     const types = ['class', 'fall', 'aws', 'braden'];
                     for (const type of types) {
                         const assessmentsRef = collection(db, patientRef.path, `${type}_assessments`);
                         const snapshot = await getDocs(assessmentsRef);
                         snapshot.forEach(doc => batch.delete(doc.ref));
                     }
-                    
                     batch.delete(patientRef);
                     await batch.commit();
-                    
-                    if (currentPatientData && currentPatientData.id === patientId) { 
-                        window.showDashboard(window.currentDashboardView || 'all'); 
-                    }
+                    if (currentPatientData && currentPatientData.id === patientId) window.showDashboard(window.currentDashboardView || 'all'); 
                     showToast(`ลบข้อมูลผู้ป่วยและประวัติทั้งหมดสำเร็จ`, 'success');
-                } catch (error) { 
-                    showToast('ลบข้อมูลไม่สำเร็จ', 'error'); 
-                    console.error(error);
-                }
+                } catch (error) { showToast('ลบข้อมูลไม่สำเร็จ', 'error'); console.error(error); }
             });
         }
         window.confirmDeletePatient = confirmDeletePatient;
 
-        // --- Assessment Form Renderers ---
+        // --- Assessment Forms & Calculation ---
+        window.selectPatient = async (id, type) => {
+            if (!auth.currentUser) return;
+            currentAssessmentType = type;
+            const snap = await getDoc(doc(db, `artifacts/${appId}/public/data/patients`, id));
+            if(!snap.exists()) return;
+            currentPatientData = { id: snap.id, ...snap.data() };
+            
+            showPage('page-assessment');
+            document.getElementById('patient-nav-bar').innerHTML = renderPatientNavBar(id);
+            const container = document.getElementById('assessment-content');
+            let html = renderPatientHeader(type);
+
+            if (type === 'class') {
+                html += `<div class="card border-t-4 border-purple-500 shadow-xl glass">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-white/60 pb-4 mb-6">
+                            <div><h3 class="font-extrabold text-slate-800 text-xl flex items-center gap-2 drop-shadow-sm"><span class="text-purple-600 text-2xl">🗂️</span> แบบบันทึกการจำแนกประเภทผู้ป่วย</h3><p class="text-slate-600 text-sm mt-1 font-medium drop-shadow-sm">ประเมินภาระงานพยาบาลตามความต้องการของผู้ป่วย</p></div>
+                        </div>
+                        <input type="hidden" id="class-mode" value="${currentPatientData.classMode || 'adult'}">
+                        <form id="class-form"></form>
+                        <div class="mt-8 text-center p-8 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/60 shadow-sm relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-purple-300/40 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob"></div>
+                            <div class="absolute -bottom-8 -left-8 w-32 h-32 bg-pink-300/40 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
+                            <div class="relative z-10"><div class="text-sm font-bold text-slate-600 uppercase tracking-widest mb-2 drop-shadow-sm">คะแนนรวมทั้งหมด</div><div id="class-score" class="text-7xl font-black text-purple-700 my-4 drop-shadow-sm">0</div><div id="class-result" class="mt-4"></div><div id="class-recommend" class="mt-4"></div></div>
+                        </div>
+                        ${renderFooter('class')}
+                    </div>`;
+            } else if (type === 'fall') {
+                html += `<div class="card border-t-4 border-orange-500 shadow-xl glass">
+                        <div class="border-b border-white/60 pb-4 mb-6"><h3 class="font-extrabold text-slate-800 text-xl flex items-center gap-2 drop-shadow-sm"><span class="text-orange-600 text-2xl">⚠️</span> แบบประเมินความเสี่ยงต่อการพลัดตกหกล้ม</h3><p class="text-slate-600 text-sm mt-1 font-medium drop-shadow-sm">Hendrich II Fall Risk Model</p></div>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <div class="lg:col-span-2"><form id="fall-form" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">${renderSelects(assessmentDicts.fall, 'fall')}</form>${renderFooter('fall')}</div>
+                            <div class="lg:col-span-1 flex flex-col"><div id="fall-infographic-container" class="flex-1"></div><button class="btn-secondary w-full mt-4 text-sm flex justify-center items-center gap-2 glass hover:bg-white/80 shadow-md py-3 font-bold border-white/60 transition-transform hover:-translate-y-1" onclick="window.downloadFallInfographic()"><span class="icon-3d text-lg">📥</span> บันทึกรูปภาพคำแนะนำ</button></div>
+                        </div>
+                    </div>`;
+            } else if (type === 'aws') {
+                 html += `<div class="card border-t-4 border-blue-600 shadow-xl glass">
+                        <div class="border-b border-white/60 pb-4 mb-6"><h3 class="font-extrabold text-slate-800 text-xl flex items-center gap-2 drop-shadow-sm"><span class="text-blue-600 text-2xl">🍷</span> แบบประเมินกลุ่มอาการถอนพิษสุรา</h3><p class="text-slate-600 text-sm mt-1 font-medium drop-shadow-sm">Clinical Institute Withdrawal Assessment for Alcohol (CIWA-Ar)</p></div>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <div class="lg:col-span-2"><form id="aws-form" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">${renderSelects(assessmentDicts.aws, 'aws')}</form>
+                                <div class="bg-blue-50/60 backdrop-blur-sm p-5 rounded-2xl border border-blue-200/50 mt-6 shadow-inner">
+                                    <h4 class="font-extrabold text-blue-900 mb-4 flex items-center gap-2 drop-shadow-sm"><span class="icon-3d">📝</span> ข้อมูลเพิ่มเติม (ไม่คำนวณคะแนน)</h4>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-5">
+                                        <div><label class="text-xs font-bold text-slate-700 block mb-1.5 uppercase drop-shadow-sm">ระดับความรู้สึกตัว</label><select id="aws-cons" class="form-select text-sm py-2.5 shadow-sm bg-white/80 font-bold"><option>ตื่น รู้ตัวดี</option><option>สับสน</option><option>ซึม</option><option>Semi-Comatose</option><option>Comatose</option></select></div>
+                                        <div><label class="text-xs font-bold text-slate-700 block mb-1.5 uppercase drop-shadow-sm">สัญญาณชีพ / Pupils</label><input type="text" id="aws-vs" class="form-input text-sm py-2.5 shadow-sm bg-white/80 font-bold" placeholder="เช่น BP 140/90, HR 110"></div>
+                                        <div class="sm:col-span-2"><label class="text-xs font-bold text-slate-700 block mb-1.5 uppercase drop-shadow-sm">ยาที่ให้บรรเทาอาการ (Medication)</label><input type="text" id="aws-med" list="aws-med-options" class="form-input text-sm font-bold text-blue-800 bg-white/90 border-blue-300/50 py-2.5 shadow-sm" placeholder="คลิกเพื่อเลือกจากรายการ หรือ พิมพ์ระบุเอง">
+                                            <datalist id="aws-med-options"><option value="Ativan(1) 1 tab PO"><option value="Ativan(1) 2 tab PO"><option value="Ativan(1) 3 tab PO"><option value="Ativan(1) 4 tab PO"><option value="ยาฉีด Diazepam 10 mg IV"><option value="ยาฉีด Diazepam 5 mg IV"><option value="ยาฉีด Haloperidol 5 mg IM"><option value="ยาฉีด Haloperidol 2.5 mg IM"></datalist>
+                                        </div>
+                                    </div>
+                                </div>${renderFooter('aws')}</div>
+                            <div class="lg:col-span-1 flex flex-col"><div id="aws-infographic-container" class="flex-1"></div><button class="btn-secondary w-full mt-4 text-sm flex justify-center items-center gap-2 glass hover:bg-white/80 shadow-md py-3 font-bold border-white/60 transition-transform hover:-translate-y-1" onclick="window.downloadAwsInfographic()"><span class="icon-3d text-lg">📥</span> บันทึกรูปภาพคำแนะนำ</button></div>
+                        </div>
+                    </div>`;
+            } else if (type === 'braden') {
+                 html += `<div class="card border-t-4 border-teal-500 shadow-xl glass">
+                 <div class="border-b border-white/60 pb-4 mb-6"><h3 class="font-extrabold text-slate-800 text-xl flex items-center gap-2 drop-shadow-sm"><span class="text-teal-600 text-2xl">🛏️</span> แบบประเมินความเสี่ยงเกิดแผลกดทับ</h3><p class="text-slate-600 text-sm mt-1 font-medium drop-shadow-sm">Braden Scale for Predicting Pressure Sore Risk</p></div>
+                 <form id="braden-form" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">${renderSelects(assessmentDicts.braden, 'braden')}</form>
+                 <div class="bg-teal-50/60 backdrop-blur-sm p-6 rounded-2xl border border-teal-200/50 mt-8 shadow-inner">
+                     <h4 class="font-extrabold text-teal-900 mb-4 flex items-center gap-2 drop-shadow-sm"><span class="icon-3d">🩹</span> บันทึกข้อมูลแผลกดทับที่พบ (ไม่คำนวณคะแนน)</h4>
+                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div><label class="text-xs font-bold text-slate-700 block mb-1.5 uppercase drop-shadow-sm">ตำแหน่งแผล</label><input type="text" id="braden-loc" class="form-input bg-white/80 text-sm shadow-sm font-bold" placeholder="เช่น ก้นกบ, ส้นเท้า"></div>
+                        <div><label class="text-xs font-bold text-slate-700 block mb-1.5 uppercase drop-shadow-sm">ขนาด (cm)</label><input type="text" id="braden-size" class="form-input bg-white/80 text-sm shadow-sm font-bold" placeholder="กว้าง x ยาว x ลึก"></div>
+                        <div><label class="text-xs font-bold text-slate-700 block mb-1.5 uppercase drop-shadow-sm">ระดับ (Stage)</label><select id="braden-stage" class="form-select bg-white/80 text-sm shadow-sm font-bold"><option value="">- ระบุระดับ -</option><option>Stage 1</option><option>Stage 2</option><option>Stage 3</option><option>Stage 4</option><option>Unstageable</option><option>DTI</option></select></div>
+                        <div><label class="text-xs font-bold text-slate-700 block mb-1.5 uppercase drop-shadow-sm">จำนวน (จุด)</label><input type="number" id="braden-qty" class="form-input bg-white/80 text-sm shadow-sm font-bold" placeholder="ระบุตัวเลข"></div>
+                     </div>
+                 </div>
+                 <div class="mt-8 text-center p-8 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/60 shadow-sm relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-32 h-32 bg-teal-300/40 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob"></div>
+                    <div class="relative z-10"><div class="text-sm font-bold text-slate-600 uppercase tracking-widest mb-2 drop-shadow-sm">คะแนนความเสี่ยงรวม</div><div id="braden-score" class="text-7xl font-black text-teal-600 my-4 drop-shadow-sm">0 <span class="text-3xl font-bold text-slate-400">/ 23</span></div><div id="braden-result" class="mt-4"></div></div>
+                 </div>
+                 ${renderFooter('braden')}
+                 </div>`;
+            }
+
+            html += `<div class="card shadow-xl mt-6 border border-white/80 glass">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-white/60 pb-4 mb-4 gap-3">
+                    <h3 class="font-extrabold text-xl text-slate-800 flex items-center gap-2 drop-shadow-sm"><span class="icon-3d text-slate-500">⏱️</span> ประวัติการประเมินย้อนหลัง</h3>
+                    <button class="glass hover:bg-indigo-50/80 text-indigo-700 border border-indigo-200/50 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow-sm transition-transform hover:-translate-y-1" onclick="window.printDetailedPdf('${type}', '${currentPatientData.id}')"><span class="text-lg">🖨️</span> พิมพ์ประวัติละเอียด</button>
+                </div>
+                <div class="overflow-x-auto rounded-xl border border-white/60 glass shadow-sm"><table class="w-full text-sm text-left border-collapse"><thead class="bg-white/40 text-slate-600 uppercase text-xs tracking-wider border-b border-white/60"><tr><th class="p-4 font-extrabold drop-shadow-sm">วันที่ / เวร</th><th class="p-4 font-extrabold text-center drop-shadow-sm">คะแนน</th><th class="p-4 font-extrabold drop-shadow-sm">ผลลัพธ์</th><th class="p-4 font-extrabold drop-shadow-sm">ผู้ประเมิน</th><th class="p-4 font-extrabold text-right drop-shadow-sm">จัดการ</th></tr></thead><tbody id="history-body" class="divide-y divide-white/40"></tbody></table></div>
+            </div>`;
+            
+            container.innerHTML = html;
+            
+            if (type === 'class') {
+                window.renderClassForm();
+            } else {
+                if (type === 'fall') {
+                    document.querySelectorAll(`.fall-item`).forEach(el => el.addEventListener('change', window.calcFall));
+                } else if(type === 'aws') {
+                    document.querySelectorAll(`.aws-item`).forEach(el => el.addEventListener('change', window.calcAws));
+                } else if(type === 'braden') {
+                    document.querySelectorAll(`.braden-item`).forEach(el => el.addEventListener('change', window.calcBraden));
+                }
+            }
+
+            try {
+                const snapshot = await getDocs(collection(db, `artifacts/${appId}/public/data/patients/${currentPatientData.id}/${type}_assessments`));
+                if (!snapshot.empty) {
+                    let docsData = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
+                    docsData.sort((a, b) => new Date(b.assessmentAt).getTime() - new Date(a.assessmentAt).getTime());
+                    const latest = docsData[0]; 
+                    
+                    if(latest.details) {
+                        for(let k in latest.details) {
+                            const el = document.querySelector(`.${type}-item[name="${k}"]`);
+                            if(el) el.value = latest.details[k];
+                        }
+                    }
+                    if (type === 'aws') {
+                        if(latest.consciousness) document.getElementById('aws-cons').value = latest.consciousness;
+                        if(latest.vitals) document.getElementById('aws-vs').value = latest.vitals;
+                        if(latest.medication) document.getElementById('aws-med').value = latest.medication;
+                    } else if (type === 'braden') {
+                        if(latest.ulcerLoc) document.getElementById('braden-loc').value = latest.ulcerLoc;
+                        if(latest.ulcerSize) document.getElementById('braden-size').value = latest.ulcerSize;
+                        if(latest.ulcerStage) document.getElementById('braden-stage').value = latest.ulcerStage;
+                        if(latest.ulcerQty) document.getElementById('braden-qty').value = latest.ulcerQty;
+                    }
+                }
+            } catch (e) { console.error("Error pre-filling data:", e); }
+
+            if (type === 'class') window.calcClass();
+            else if (type === 'fall') window.calcFall();
+            else if (type === 'aws') window.calcAws();
+            else if (type === 'braden') window.calcBraden();
+
+            loadHistoryTable(type);
+        }
+
         function renderPatientHeader(type) {
             const bg = { aws: 'bg-blue-50/80 border-blue-200/50', braden: 'bg-teal-50/80 border-teal-200/50', class: 'bg-purple-50/80 border-purple-200/50', fall: 'bg-orange-50/80 border-orange-200/50' }[type];
             let extraInfo = '';
-            
             const modeText = currentPatientData.classMode === 'child' ? 'ใบประเมินเด็ก (0-15 ปี)' : 'ใบประเมินผู้ใหญ่ (> 15 ปี)';
             extraInfo = `<div class="mt-2"><span class="bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white px-3 py-1 rounded-full text-[11px] font-extrabold shadow-md uppercase tracking-wide border border-white/20 drop-shadow">${modeText}</span></div>`;
-            
             if (type === 'aws' && (currentPatientData.lastDrinkDate || currentPatientData.lastDrinkTime)) {
                  extraInfo += `<div class="mt-1.5"><span class="glass text-blue-900 px-2 py-1 rounded text-[11px] font-extrabold border border-white/60 shadow-sm drop-shadow-sm">🍺 ดื่มล่าสุด: ${currentPatientData.lastDrinkDate || '-'} ${currentPatientData.lastDrinkTime || ''}</span></div>`;
             }
@@ -2058,7 +2067,6 @@
             if (type !== 'fall') quickLinks += `<button class="glass hover:bg-white/80 text-orange-800 text-xs px-3 py-1.5 rounded-xl font-bold shadow-sm transition-all hover:-translate-y-0.5 flex items-center gap-1 border-white/80" onclick="window.selectPatient('${currentPatientData.id}', 'fall')"><span class="icon-3d">⚠️</span> ไปหกล้ม</button>`;
             if (type !== 'aws' && currentPatientData.enrolledAws) quickLinks += `<button class="glass hover:bg-white/80 text-blue-800 text-xs px-3 py-1.5 rounded-xl font-bold shadow-sm transition-all hover:-translate-y-0.5 flex items-center gap-1 border-white/80" onclick="window.selectPatient('${currentPatientData.id}', 'aws')"><span class="icon-3d">🍷</span> ไปประเมิน AWS</button>`;
             if (type !== 'braden' && currentPatientData.enrolledBraden) quickLinks += `<button class="glass hover:bg-white/80 text-teal-800 text-xs px-3 py-1.5 rounded-xl font-bold shadow-sm transition-all hover:-translate-y-0.5 flex items-center gap-1 border-white/80" onclick="window.selectPatient('${currentPatientData.id}', 'braden')"><span class="icon-3d">🛏️</span> ไปประเมิน Braden</button>`;
-
             if (type === 'aws' || type === 'braden') {
                 quickLinks += `<button class="glass hover:bg-red-50/80 text-red-700 text-xs px-3 py-1.5 rounded-xl font-extrabold shadow-sm transition-all hover:-translate-y-0.5 flex items-center gap-1 ml-0 md:ml-auto border-white/80" onclick="window.unenrollPatientFromAssessment('${currentPatientData.id}', '${type}')"><span class="icon-3d">❌</span> เลิกติดตาม</button>`;
             }
@@ -2078,28 +2086,17 @@
             </div>`;
         }
 
-        function renderClassTable(mode) {
+        window.renderClassForm = () => {
+            const mode = document.getElementById('class-mode').value;
             const dict = mode === 'adult' ? assessmentDicts.classAdult : assessmentDicts.classChild;
-            let html = `<div class="overflow-x-auto rounded-xl border border-white/60 shadow-sm glass"><table class="w-full text-sm text-left border-collapse assessment-table">
-                <thead class="bg-white/40 text-slate-700 border-b border-white/60">
-                    <tr><th class="w-12 text-center py-4 bg-transparent border-white/40">ลำดับ</th><th class="py-4 bg-transparent border-white/40">ตัวชี้วัดในการพยาบาล</th><th class="w-24 text-center py-4 bg-transparent border-white/40">คะแนนเต็ม</th><th class="w-32 text-center py-4 bg-transparent border-white/40">คะแนนที่ได้</th></tr>
-                </thead>
-                <tbody class="divide-y divide-white/40">`;
+            let html = `<div class="overflow-x-auto rounded-xl border border-white/60 shadow-sm glass"><table class="w-full text-sm text-left border-collapse assessment-table"><thead class="bg-white/40 text-slate-700 border-b border-white/60"><tr><th class="w-12 text-center py-4 bg-transparent border-white/40">ลำดับ</th><th class="py-4 bg-transparent border-white/40">ตัวชี้วัดในการพยาบาล</th><th class="w-24 text-center py-4 bg-transparent border-white/40">คะแนนเต็ม</th><th class="w-32 text-center py-4 bg-transparent border-white/40">คะแนนที่ได้</th></tr></thead><tbody class="divide-y divide-white/40">`;
             let i = 1;
             for(let key in dict) {
-                html += `<tr>
-                    <td class="text-center font-extrabold text-slate-400 align-middle border-white/40 bg-transparent">${i++}</td>
-                    <td class="font-bold text-slate-700 border-white/40 bg-transparent">
-                        ${fieldLabels[mode === 'adult' ? 'classAdult' : 'classChild'][key]}
-                        <div id="desc-${key}" class="text-[12px] text-purple-700 mt-1.5 font-extrabold glass border border-purple-200/50 inline-block px-2 py-0.5 rounded-lg empty:hidden drop-shadow-sm"></div>
-                    </td>
-                    <td class="text-center text-slate-400 align-middle font-extrabold border-white/40 bg-transparent drop-shadow-sm">5</td>
-                    <td class="text-center align-middle border-white/40 bg-transparent"><input type="number" min="1" max="5" name="${key}" class="class-item form-input text-center font-black text-xl text-purple-700 shadow-inner bg-white/70 border-white/80 w-[70px] h-[50px]" value="1" oninput="window.calcClass()"></td>
-                </tr>`;
+                html += `<tr><td class="text-center font-extrabold text-slate-400 align-middle border-white/40 bg-transparent">${i++}</td><td class="font-bold text-slate-700 border-white/40 bg-transparent">${fieldLabels[mode === 'adult' ? 'classAdult' : 'classChild'][key]}<div id="desc-${key}" class="text-[12px] text-purple-700 mt-1.5 font-extrabold glass border border-purple-200/50 inline-block px-2 py-0.5 rounded-lg empty:hidden drop-shadow-sm"></div></td><td class="text-center text-slate-400 align-middle font-extrabold border-white/40 bg-transparent drop-shadow-sm">5</td><td class="text-center align-middle border-white/40 bg-transparent"><input type="number" min="1" max="5" name="${key}" class="class-item form-input text-center font-black text-xl text-purple-700 shadow-inner bg-white/70 border-white/80 w-[70px] h-[50px]" value="1" oninput="window.calcClass()"></td></tr>`;
             }
-            html += `</tbody></table></div>`;
-            return html;
-        }
+            document.getElementById('class-form').innerHTML = html + `</tbody></table></div>`;
+            window.calcClass();
+        };
 
         function renderSelects(dict, prefix) {
             return Object.entries(dict).map(([key, opts]) => `
@@ -2120,11 +2117,9 @@
             const now = new Date();
             const dateStr = now.toISOString().split('T')[0];
             const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
-            
             const hour = now.getHours();
             let currentShift = 'บ่าย';
-            if (hour >= 0 && hour < 8) currentShift = 'ดึก';
-            else if (hour >= 8 && hour < 16) currentShift = 'เช้า';
+            if (hour >= 0 && hour < 8) currentShift = 'ดึก'; else if (hour >= 8 && hour < 16) currentShift = 'เช้า';
 
             return `<div class="mt-8 glass p-6 rounded-2xl border border-white/80 shadow-md relative overflow-hidden">
                 <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-blue-400 to-indigo-500 shadow-lg"></div>
@@ -2132,19 +2127,10 @@
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
                     <div><label class="text-xs font-extrabold text-slate-600 block mb-1.5 uppercase tracking-wide drop-shadow-sm">วันที่ประเมิน</label><input type="date" id="asmnt-date" class="form-input bg-white/80 text-sm font-bold shadow-sm border-white/80" value="${dateStr}"></div>
                     <div><label class="text-xs font-extrabold text-slate-600 block mb-1.5 uppercase tracking-wide drop-shadow-sm">เวลา</label><input type="time" id="asmnt-time" class="form-input bg-white/80 text-sm font-bold shadow-sm border-white/80" value="${timeStr}"></div>
-                    <div><label class="text-xs font-extrabold text-slate-600 block mb-1.5 uppercase tracking-wide drop-shadow-sm">เวร</label><select id="asmnt-shift" class="form-select bg-white/80 text-sm font-bold shadow-sm border-white/80">
-                        <option value="ดึก" ${currentShift === 'ดึก' ? 'selected' : ''}>ดึก (00:00-08:00)</option>
-                        <option value="เช้า" ${currentShift === 'เช้า' ? 'selected' : ''}>เช้า (08:00-16:00)</option>
-                        <option value="บ่าย" ${currentShift === 'บ่าย' ? 'selected' : ''}>บ่าย (16:00-00:00)</option>
-                    </select></div>
+                    <div><label class="text-xs font-extrabold text-slate-600 block mb-1.5 uppercase tracking-wide drop-shadow-sm">เวร</label><select id="asmnt-shift" class="form-select bg-white/80 text-sm font-bold shadow-sm border-white/80"><option value="ดึก" ${currentShift === 'ดึก' ? 'selected' : ''}>ดึก (00:00-08:00)</option><option value="เช้า" ${currentShift === 'เช้า' ? 'selected' : ''}>เช้า (08:00-16:00)</option><option value="บ่าย" ${currentShift === 'บ่าย' ? 'selected' : ''}>บ่าย (16:00-00:00)</option></select></div>
                     <div>
-                        <label class="text-xs font-extrabold text-slate-600 flex justify-between mb-1.5 uppercase tracking-wide drop-shadow-sm">
-                            <span>ผู้ประเมิน <span class="text-red-500">*</span></span>
-                            <button type="button" onclick="window.openLoginModal()" class="text-blue-700 hover:text-blue-900 font-bold text-[10px] glass px-2 py-0.5 rounded-lg transition-colors border-white/60 shadow-sm">🔄 เปลี่ยน</button>
-                        </label>
-                        <div id="asmnt-assessor-display" class="bg-white/50 backdrop-blur border border-white/60 rounded-xl px-3 py-2 h-[42px] flex items-center shadow-inner">
-                            ${assessorDisplay}
-                        </div>
+                        <label class="text-xs font-extrabold text-slate-600 flex justify-between mb-1.5 uppercase tracking-wide drop-shadow-sm"><span>ผู้ประเมิน <span class="text-red-500">*</span></span><button type="button" onclick="window.openLoginModal()" class="text-blue-700 hover:text-blue-900 font-bold text-[10px] glass px-2 py-0.5 rounded-lg transition-colors border-white/60 shadow-sm">🔄 เปลี่ยน</button></label>
+                        <div id="asmnt-assessor-display" class="bg-white/50 backdrop-blur border border-white/60 rounded-xl px-3 py-2 h-[42px] flex items-center shadow-inner">${assessorDisplay}</div>
                     </div>
                 </div>
                 <div class="mt-8 flex flex-col md:flex-row justify-end gap-3 pt-5 border-t border-white/40">
@@ -2158,15 +2144,11 @@
             const mode = document.getElementById('class-mode').value;
             let score = 0;
             document.querySelectorAll(`.class-item`).forEach(el => {
-                const val = parseInt(el.value) || 0;
-                score += val;
+                const val = parseInt(el.value) || 0; score += val;
                 const descEl = document.getElementById(`desc-${el.name}`);
-                if(descEl && classCriteriaMap[mode][el.name]) {
-                    descEl.textContent = classCriteriaMap[mode][el.name][val] || '';
-                }
+                if(descEl && classCriteriaMap[mode][el.name]) descEl.textContent = classCriteriaMap[mode][el.name][val] || '';
             });
             document.getElementById('class-score').innerHTML = `${score}`;
-            
             let cat = 1, desc = '', rec = '';
             if (mode === 'adult') {
                 if(score>=45) { cat=5; desc="Intensive Care (IC)"; rec="ต้องการการพยาบาลอย่างใกล้ชิดตลอดเวลา V/S บ่อยมาก สังเกตอาการตลอด"; }
@@ -2181,7 +2163,6 @@
                 else if(score>=6) { cat=2; desc="Minimal ill (MI)"; rec="ดูแลช่วยเหลือทั่วไป"; }
                 else { cat=1; desc="Convalescent ill (CL)"; rec="พักฟื้น เตรียมกลับบ้าน"; }
             }
-            
             let color = cat>=4 ? 'text-red-800 bg-red-100/90 ring-1 ring-red-300 border-red-200' : (cat==3 ? 'text-orange-800 bg-orange-100/90 ring-1 ring-orange-300 border-orange-200' : 'text-emerald-800 bg-emerald-100/90 ring-1 ring-emerald-300 border-emerald-200');
             document.getElementById('class-result').innerHTML = `<span class="inline-block px-6 py-2 rounded-full font-black text-lg shadow-md border backdrop-blur-md drop-shadow-sm ${color}">ประเภทที่ ${cat} : ${desc}</span>`;
             document.getElementById('class-recommend').innerHTML = `<div class="glass inline-block px-6 py-4 rounded-2xl border border-white/80 shadow-md text-slate-800 font-bold mt-2 hover:-translate-y-1 transition-transform"><span class="text-purple-700 font-black mr-2 drop-shadow-sm text-lg">💡 คำแนะนำ:</span> ${rec}</div>`;
@@ -2189,141 +2170,61 @@
         };
 
         window.calcFall = () => {
-            let score = 0;
-            document.querySelectorAll(`.fall-item`).forEach(el => score += (parseInt(el.value.split(' - ')[0]) || 0));
-            
+            let score = 0; document.querySelectorAll(`.fall-item`).forEach(el => score += (parseInt(el.value.split(' - ')[0]) || 0));
             let risk = '', colorClass = '', recs = [];
             if (score >= 5) { 
-                risk = 'เสี่ยงหกล้มสูง (High Risk)'; 
-                colorClass = 'info-red border-red-300/50'; 
-                recs = [
-                    '<span class="icon-3d text-2xl drop-shadow-sm">🛏️</span> ยกไม้กั้นเตียงขึ้น 2 ข้างตลอดเวลา',
-                    '<span class="icon-3d text-2xl drop-shadow-sm">🛑</span> แขวนป้ายเตือนสีแดงที่เตียงผู้ป่วย',
-                    '<span class="icon-3d text-2xl drop-shadow-sm">👀</span> ให้ญาติเฝ้าระวังดูแลอย่างใกล้ชิดตลอด 24 ชม.',
-                    '<span class="icon-3d text-2xl drop-shadow-sm">🚽</span> ดูแลช่วยเหลือเรื่องการขับถ่ายบนเตียง',
-                    '<span class="icon-3d text-2xl drop-shadow-sm">⏱️</span> ประเมินซ้ำอย่างน้อยเวรละ 1 ครั้ง'
-                ];
+                risk = 'เสี่ยงหกล้มสูง (High Risk)'; colorClass = 'info-red border-red-300/50'; 
+                recs = ['<span class="icon-3d text-2xl drop-shadow-sm">🛏️</span> ยกไม้กั้นเตียงขึ้น 2 ข้างตลอดเวลา','<span class="icon-3d text-2xl drop-shadow-sm">🛑</span> แขวนป้ายเตือนสีแดงที่เตียงผู้ป่วย','<span class="icon-3d text-2xl drop-shadow-sm">👀</span> ให้ญาติเฝ้าระวังดูแลอย่างใกล้ชิดตลอด 24 ชม.','<span class="icon-3d text-2xl drop-shadow-sm">🚽</span> ดูแลช่วยเหลือเรื่องการขับถ่ายบนเตียง','<span class="icon-3d text-2xl drop-shadow-sm">⏱️</span> ประเมินซ้ำอย่างน้อยเวรละ 1 ครั้ง'];
             } else if (score >= 1) { 
-                risk = 'มีความเสี่ยง (At Risk)'; 
-                colorClass = 'info-orange border-orange-300/50';
-                recs = [
-                    '<span class="icon-3d text-2xl drop-shadow-sm">💡</span> จัดสิ่งแวดล้อมให้ปลอดภัย แสงสว่างเพียงพอ',
-                    '<span class="icon-3d text-2xl drop-shadow-sm">🔶</span> แขวนป้ายเตือนสีส้มที่เตียงผู้ป่วย',
-                    '<span class="icon-3d text-2xl drop-shadow-sm">🔔</span> แนะนำให้เรียกพยาบาลเมื่อต้องการลงจากเตียง',
-                    '<span class="icon-3d text-2xl drop-shadow-sm">⏱️</span> ประเมินซ้ำวันละ 1 ครั้ง'
-                ];
+                risk = 'มีความเสี่ยง (At Risk)'; colorClass = 'info-orange border-orange-300/50';
+                recs = ['<span class="icon-3d text-2xl drop-shadow-sm">💡</span> จัดสิ่งแวดล้อมให้ปลอดภัย แสงสว่างเพียงพอ','<span class="icon-3d text-2xl drop-shadow-sm">🔶</span> แขวนป้ายเตือนสีส้มที่เตียงผู้ป่วย','<span class="icon-3d text-2xl drop-shadow-sm">🔔</span> แนะนำให้เรียกพยาบาลเมื่อต้องการลงจากเตียง','<span class="icon-3d text-2xl drop-shadow-sm">⏱️</span> ประเมินซ้ำวันละ 1 ครั้ง'];
             } else { 
-                risk = 'ไม่มีความเสี่ยง (Low Risk)'; 
-                colorClass = 'info-green border-green-300/50'; 
-                recs = [
-                    '<span class="icon-3d text-2xl drop-shadow-sm">🗣️</span> ให้สุขศึกษาเรื่องการป้องกันการพลัดตกหกล้มทั่วไป',
-                    '<span class="icon-3d text-2xl drop-shadow-sm">✅</span> จัดสิ่งแวดล้อมตามมาตรฐาน',
-                    '<span class="icon-3d text-2xl drop-shadow-sm">🔄</span> ประเมินซ้ำเมื่ออาการเปลี่ยนแปลง'
-                ];
+                risk = 'ไม่มีความเสี่ยง (Low Risk)'; colorClass = 'info-green border-green-300/50'; 
+                recs = ['<span class="icon-3d text-2xl drop-shadow-sm">🗣️</span> ให้สุขศึกษาเรื่องการป้องกันการพลัดตกหกล้มทั่วไป','<span class="icon-3d text-2xl drop-shadow-sm">✅</span> จัดสิ่งแวดล้อมตามมาตรฐาน','<span class="icon-3d text-2xl drop-shadow-sm">🔄</span> ประเมินซ้ำเมื่ออาการเปลี่ยนแปลง'];
             }
-            
-            const infoHtml = `
-                <div id="fall-infographic" class="infographic-card ${colorClass} p-8 flex flex-col items-center text-center h-full justify-center">
-                    <div class="text-slate-600 font-extrabold text-sm mb-3 uppercase tracking-widest bg-white/70 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/60 shadow-sm drop-shadow-sm">ผลรวมคะแนนความเสี่ยง</div>
-                    <div class="text-8xl font-black text-slate-800 mb-4 leading-none drop-shadow-md tracking-tighter">${score}</div>
-                    <div class="text-xl font-black rounded-full px-8 py-2.5 mb-6 bg-white/90 shadow-md border border-white text-slate-800 drop-shadow-sm">${risk}</div>
-                    <div class="w-full glass rounded-2xl p-5 text-left shadow-lg mt-2 flex-1 border border-white flex flex-col backdrop-blur-xl hover:-translate-y-1 transition-transform">
-                        <h4 class="font-black text-slate-800 border-b-2 border-white/60 pb-3 mb-4 flex items-center gap-2 text-lg drop-shadow-sm"><span class="icon-3d">📌</span> แนวทางปฏิบัติที่แนะนำ</h4>
-                        <ul class="text-[14px] space-y-3.5 text-slate-800 font-bold">
-                            ${recs.map(r => `<li class="flex items-center gap-3.5 bg-white/70 p-3 rounded-xl shadow-sm border border-white/80">${r}</li>`).join('')}
-                        </ul>
-                    </div>
-                </div>
-            `;
-            
-            document.getElementById('fall-infographic-container').innerHTML = infoHtml;
+            document.getElementById('fall-infographic-container').innerHTML = `<div id="fall-infographic" class="infographic-card ${colorClass} p-8 flex flex-col items-center text-center h-full justify-center"><div class="text-slate-600 font-extrabold text-sm mb-3 uppercase tracking-widest bg-white/70 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/60 shadow-sm drop-shadow-sm">ผลรวมคะแนนความเสี่ยง</div><div class="text-8xl font-black text-slate-800 mb-4 leading-none drop-shadow-md tracking-tighter">${score}</div><div class="text-xl font-black rounded-full px-8 py-2.5 mb-6 bg-white/90 shadow-md border border-white text-slate-800 drop-shadow-sm">${risk}</div><div class="w-full glass rounded-2xl p-5 text-left shadow-lg mt-2 flex-1 border border-white flex flex-col backdrop-blur-xl hover:-translate-y-1 transition-transform"><h4 class="font-black text-slate-800 border-b-2 border-white/60 pb-3 mb-4 flex items-center gap-2 text-lg drop-shadow-sm"><span class="icon-3d">📌</span> แนวทางปฏิบัติที่แนะนำ</h4><ul class="text-[14px] space-y-3.5 text-slate-800 font-bold">${recs.map(r => `<li class="flex items-center gap-3.5 bg-white/70 p-3 rounded-xl shadow-sm border border-white/80">${r}</li>`).join('')}</ul></div></div>`;
             return { score, risk };
         };
 
         window.downloadFallInfographic = async () => {
-            const el = document.getElementById('fall-infographic');
             showToast('กำลังประมวลผลรูปภาพ...', 'info');
             try {
-                const canvas = await html2canvas(el, {scale: 3, useCORS: true, backgroundColor: null});
+                const canvas = await html2canvas(document.getElementById('fall-infographic'), {scale: 3, useCORS: true, backgroundColor: null});
                 const link = document.createElement('a');
-                link.download = `Fall_Risk_Alert_HN${currentPatientData.hn}.jpeg`;
-                link.href = canvas.toDataURL('image/jpeg', 0.95);
-                link.click();
+                link.download = `Fall_Risk_Alert_HN${currentPatientData.hn}.jpeg`; link.href = canvas.toDataURL('image/jpeg', 0.95); link.click();
                 showToast('ดาวน์โหลดรูปภาพสำเร็จ', 'success');
-            } catch(e) {
-                console.error(e);
-                showToast('เกิดข้อผิดพลาดในการสร้างภาพ', 'error');
-            }
+            } catch(e) { console.error(e); showToast('เกิดข้อผิดพลาดในการสร้างภาพ', 'error'); }
         };
 
         window.calcAws = () => {
             let score = 0; document.querySelectorAll(`.aws-item`).forEach(el => score += (parseInt(el.value.split(' - ')[0]) || 0));
-            
             let level, colorClass, care, meds;
             if (score >= 10) {
-                level = "รุนแรง (Severe)";
-                colorClass = "info-red border-red-300/50";
+                level = "รุนแรง (Severe)"; colorClass = "info-red border-red-300/50";
                 care = "ประเมินซ้ำทุก 30 นาที เฝ้าระวังอย่างใกล้ชิดระดับ ICU/Monitor ป้องกันการชัก/ทำร้ายตนเอง";
-                meds = `<ul class="list-disc pl-5 mt-2 space-y-2">
-                            <li><b>Valium (Diazepam):</b> 5-10 mg IV ช้าๆ (ซ้ำได้จนกว่าจะสงบ ตาม Order)</li>
-                            <li><b>Lorazepam (Ativan):</b> 2-4 mg PO (หากผู้ป่วยพอทานได้)</li>
-                            <li><b>Haldol (Haloperidol):</b> 5 mg IM (กรณีมีประสาทหลอน/ก้าวร้าวรุนแรง)</li>
-                        </ul>`;
+                meds = `<ul class="list-disc pl-5 mt-2 space-y-2"><li><b>Valium (Diazepam):</b> 5-10 mg IV ช้าๆ (ซ้ำได้จนกว่าจะสงบ ตาม Order)</li><li><b>Lorazepam (Ativan):</b> 2-4 mg PO (หากผู้ป่วยพอทานได้)</li><li><b>Haldol (Haloperidol):</b> 5 mg IM (กรณีมีประสาทหลอน/ก้าวร้าวรุนแรง)</li></ul>`;
             } else if (score >= 5) {
-                level = "ปานกลาง (Moderate)";
-                colorClass = "info-orange border-orange-300/50";
+                level = "ปานกลาง (Moderate)"; colorClass = "info-orange border-orange-300/50";
                 care = "ประเมินซ้ำทุก 1 ชั่วโมง รายงานแพทย์ จัดสิ่งแวดล้อมให้สงบ ป้องกันพลัดตกเตียง";
-                meds = `<ul class="list-disc pl-5 mt-2 space-y-2">
-                            <li><b>Lorazepam (Ativan):</b> 1-2 mg PO</li>
-                            <li><b>Valium (Diazepam):</b> 5 mg IV ช้าๆ (กรณีทานไม่ได้ หรือต้องการผลเร็ว)</li>
-                            <li><b>Haldol (Haloperidol):</b> 2.5-5 mg IM (กรณีเริ่มมีอาการทางจิต/วุ่นวาย)</li>
-                        </ul>`;
+                meds = `<ul class="list-disc pl-5 mt-2 space-y-2"><li><b>Lorazepam (Ativan):</b> 1-2 mg PO</li><li><b>Valium (Diazepam):</b> 5 mg IV ช้าๆ (กรณีทานไม่ได้ หรือต้องการผลเร็ว)</li><li><b>Haldol (Haloperidol):</b> 2.5-5 mg IM (กรณีเริ่มมีอาการทางจิต/วุ่นวาย)</li></ul>`;
             } else { // 0-4
-                level = "เล็กน้อย (Mild)";
-                colorClass = "info-green border-green-300/50";
+                level = "เล็กน้อย (Mild)"; colorClass = "info-green border-green-300/50";
                 care = "ดูแลประคับประคอง ประเมินซ้ำทุก 4 ชั่วโมง ให้สารน้ำและวิตามินทดแทน";
-                meds = `<ul class="list-disc pl-5 mt-2 space-y-2">
-                            <li><b>Thiamine (Vit B1):</b> 100 mg IV/IM/PO (ตามแผนการรักษาพื้นฐาน)</li>
-                            <li>ประเมินอาการต่อเนื่อง มักยังไม่จำเป็นต้องให้ยาระงับประสาท</li>
-                        </ul>`;
+                meds = `<ul class="list-disc pl-5 mt-2 space-y-2"><li><b>Thiamine (Vit B1):</b> 100 mg IV/IM/PO (ตามแผนการรักษาพื้นฐาน)</li><li>ประเมินอาการต่อเนื่อง มักยังไม่จำเป็นต้องให้ยาระงับประสาท</li></ul>`;
             }
             
-            const infoHtml = `
-                <div id="aws-infographic" class="infographic-card ${colorClass} p-8 flex flex-col items-center text-center h-full justify-center">
-                    <div class="text-slate-600 font-extrabold text-sm mb-3 uppercase tracking-widest bg-white/70 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/60 shadow-sm drop-shadow-sm">คะแนนถอนพิษสุรา</div>
-                    <div class="text-8xl font-black text-slate-800 mb-4 leading-none drop-shadow-md tracking-tighter">${score}<span class="text-4xl text-slate-500 font-black ml-1">/27</span></div>
-                    <div class="text-xl font-black rounded-full px-8 py-2.5 mb-6 bg-white/90 shadow-md border border-white text-slate-800 drop-shadow-sm">${level}</div>
-                    <div class="w-full glass rounded-2xl p-5 text-left shadow-lg mt-2 flex-1 border border-white flex flex-col gap-5 backdrop-blur-xl">
-                        <div class="bg-white/80 p-4 rounded-xl shadow-sm border border-white hover:-translate-y-1 transition-transform">
-                            <h4 class="font-black text-slate-800 border-b border-white/60 pb-2 mb-2 flex items-center gap-2 drop-shadow-sm"><span class="icon-3d text-xl">👩‍⚕️</span> ข้อแนะนำพยาบาล</h4>
-                            <p class="text-[14px] text-slate-800 font-bold leading-relaxed">${care}</p>
-                        </div>
-                        <div class="bg-white/80 p-4 rounded-xl shadow-sm border border-white hover:-translate-y-1 transition-transform">
-                            <h4 class="font-black text-slate-800 border-b border-white/60 pb-2 mb-2 flex items-center gap-2 drop-shadow-sm"><span class="icon-3d text-xl">💊</span> แนวทางการให้ยา (ตัวอย่าง)</h4>
-                            <div class="text-[13px] text-slate-800 font-bold leading-relaxed">${meds}</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            document.getElementById('aws-infographic-container').innerHTML = infoHtml;
+            document.getElementById('aws-infographic-container').innerHTML = `<div id="aws-infographic" class="infographic-card ${colorClass} p-8 flex flex-col items-center text-center h-full justify-center"><div class="text-slate-600 font-extrabold text-sm mb-3 uppercase tracking-widest bg-white/70 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/60 shadow-sm drop-shadow-sm">คะแนนถอนพิษสุรา</div><div class="text-8xl font-black text-slate-800 mb-4 leading-none drop-shadow-md tracking-tighter">${score}<span class="text-4xl text-slate-500 font-black ml-1">/27</span></div><div class="text-xl font-black rounded-full px-8 py-2.5 mb-6 bg-white/90 shadow-md border border-white text-slate-800 drop-shadow-sm">${level}</div><div class="w-full glass rounded-2xl p-5 text-left shadow-lg mt-2 flex-1 border border-white flex flex-col gap-5 backdrop-blur-xl"><div class="bg-white/80 p-4 rounded-xl shadow-sm border border-white hover:-translate-y-1 transition-transform"><h4 class="font-black text-slate-800 border-b border-white/60 pb-2 mb-2 flex items-center gap-2 drop-shadow-sm"><span class="icon-3d text-xl">👩‍⚕️</span> ข้อแนะนำพยาบาล</h4><p class="text-[14px] text-slate-800 font-bold leading-relaxed">${care}</p></div><div class="bg-white/80 p-4 rounded-xl shadow-sm border border-white hover:-translate-y-1 transition-transform"><h4 class="font-black text-slate-800 border-b border-white/60 pb-2 mb-2 flex items-center gap-2 drop-shadow-sm"><span class="icon-3d text-xl">💊</span> แนวทางการให้ยา (ตัวอย่าง)</h4><div class="text-[13px] text-slate-800 font-bold leading-relaxed">${meds}</div></div></div></div>`;
             return { score, level };
         };
 
         window.downloadAwsInfographic = async () => {
-            const el = document.getElementById('aws-infographic');
             showToast('กำลังประมวลผลรูปภาพ...', 'info');
             try {
-                const canvas = await html2canvas(el, {scale: 3, useCORS: true, backgroundColor: null});
+                const canvas = await html2canvas(document.getElementById('aws-infographic'), {scale: 3, useCORS: true, backgroundColor: null});
                 const link = document.createElement('a');
-                link.download = `AWS_Alert_HN${currentPatientData.hn}.jpeg`;
-                link.href = canvas.toDataURL('image/jpeg', 0.95);
-                link.click();
+                link.download = `AWS_Alert_HN${currentPatientData.hn}.jpeg`; link.href = canvas.toDataURL('image/jpeg', 0.95); link.click();
                 showToast('ดาวน์โหลดรูปภาพสำเร็จ', 'success');
-            } catch(e) {
-                console.error(e);
-                showToast('เกิดข้อผิดพลาดในการสร้างภาพ', 'error');
-            }
+            } catch(e) { console.error(e); showToast('เกิดข้อผิดพลาดในการสร้างภาพ', 'error'); }
         };
 
         window.calcBraden = () => {
@@ -2332,20 +2233,14 @@
             
             let risk, care;
             if (score <= 12) { 
-                risk = "เสี่ยงสูง (High Risk)"; 
-                care = "ประเมินซ้ำทุก 24 ชม. ใช้ที่นอนลมชนิด High Spec พลิกตัวทุก 2 ชม."; 
+                risk = "เสี่ยงสูง (High Risk)"; care = "ประเมินซ้ำทุก 24 ชม. ใช้ที่นอนลมชนิด High Spec พลิกตัวทุก 2 ชม."; 
             } else if (score <= 14) { 
-                risk = "เสี่ยงปานกลาง (Moderate Risk)"; 
-                care = "ประเมินซ้ำทุก 48 ชม. พลิกตัวทุก 2 ชม. ปกป้องปุ่มกระดูก"; 
+                risk = "เสี่ยงปานกลาง (Moderate Risk)"; care = "ประเมินซ้ำทุก 48 ชม. พลิกตัวทุก 2 ชม. ปกป้องปุ่มกระดูก"; 
             } else { 
-                risk = "เสี่ยงต่ำ (Low Risk)"; 
-                care = "ประเมินซ้ำทุก 72 ชม. ดูแลผิวหนังให้แห้งสะอาด"; 
+                risk = "เสี่ยงต่ำ (Low Risk)"; care = "ประเมินซ้ำทุก 72 ชม. ดูแลผิวหนังให้แห้งสะอาด"; 
             }
             
-            document.getElementById('braden-result').innerHTML = `
-                <div class="font-extrabold text-xl mb-4 flex items-center justify-center gap-2 drop-shadow-sm">ระดับความเสี่ยง: <span class="bg-white/90 backdrop-blur-sm px-4 py-1.5 rounded-xl shadow-md border border-white ${score<=12?'text-red-700':(score<=14?'text-orange-600':'text-emerald-700')}">${risk}</span></div>
-                <div class="text-base font-bold text-slate-800 glass inline-block px-6 py-4 rounded-2xl border border-white/80 shadow-md mt-1 hover:-translate-y-1 transition-transform"><span class="text-teal-700 font-black mr-2 drop-shadow-sm text-lg">📌 การดูแล:</span> ${care}</div>
-            `;
+            document.getElementById('braden-result').innerHTML = `<div class="font-extrabold text-xl mb-4 flex items-center justify-center gap-2 drop-shadow-sm">ระดับความเสี่ยง: <span class="bg-white/90 backdrop-blur-sm px-4 py-1.5 rounded-xl shadow-md border border-white ${score<=12?'text-red-700':(score<=14?'text-orange-600':'text-emerald-700')}">${risk}</span></div><div class="text-base font-bold text-slate-800 glass inline-block px-6 py-4 rounded-2xl border border-white/80 shadow-md mt-1 hover:-translate-y-1 transition-transform"><span class="text-teal-700 font-black mr-2 drop-shadow-sm text-lg">📌 การดูแล:</span> ${care}</div>`;
             return { score, risk };
         };
 
@@ -2356,11 +2251,8 @@
             const data = snap.data();
 
             document.getElementById('asmnt-date').value = data.dateStr || data.assessmentAt.split('T')[0];
-            
             const d = new Date(data.assessmentAt);
-            const timeStr = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
-            document.getElementById('asmnt-time').value = timeStr;
-            
+            document.getElementById('asmnt-time').value = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
             document.getElementById('asmnt-shift').value = data.shift;
             
             if(!window.currentActiveAssessor) window.setActiveAssessor(data.assessor);
@@ -2401,11 +2293,9 @@
             const saveBtn = document.getElementById('btn-save-asmnt');
             if(saveBtn) {
                 saveBtn.innerHTML = '<span class="icon-3d text-xl drop-shadow">💾</span> <span class="drop-shadow">อัปเดตข้อมูลย้อนหลัง</span>';
-                saveBtn.classList.remove('btn-primary');
-                saveBtn.classList.add('btn-warning');
+                saveBtn.classList.remove('btn-primary'); saveBtn.classList.add('btn-warning');
                 saveBtn.onclick = () => window.saveAssessment(type, true, aid);
             }
-            
             window.scrollTo({top: 0, behavior: 'smooth'});
             showToast('ดึงข้อมูลย้อนหลังเพื่อทำการแก้ไข', 'info');
         };
@@ -2415,8 +2305,7 @@
             const assessor = window.currentActiveAssessor;
             if(!assessor) {
                 showToast("กรุณาเข้าสู่ระบบ (ระบุผู้ประเมิน) ก่อนบันทึกข้อมูล", "error");
-                window.openLoginModal();
-                return;
+                window.openLoginModal(); return;
             }
 
             const formContainer = document;
@@ -2430,7 +2319,6 @@
             const assessmentAt = d.toISOString();
 
             let data = { assessmentAt, shift, assessor, dateStr: dateVal, details: {} };
-            
             let summaryUpdate = {};
             summaryUpdate[`${type}_latestAssessmentAt`] = assessmentAt;
             summaryUpdate[`${type}_latestShift`] = shift;
@@ -2479,26 +2367,8 @@
                 if(isEdit) {
                     const saveBtn = document.getElementById('btn-save-asmnt');
                     saveBtn.innerHTML = '<span class="icon-3d text-xl drop-shadow">💾</span> <span class="drop-shadow">บันทึกผลประเมิน</span>';
-                    saveBtn.classList.remove('btn-warning');
-                    saveBtn.classList.add('btn-primary');
+                    saveBtn.classList.remove('btn-warning'); saveBtn.classList.add('btn-primary');
                     saveBtn.onclick = () => window.saveAssessment(type);
-                }
-
-                if(type==='class') {
-                    document.querySelectorAll('.class-item').forEach(el=>el.value="1"); window.calcClass();
-                } else if (type==='fall') {
-                    document.querySelectorAll('.fall-item').forEach(el=>el.value=el.options[0].value); window.calcFall();
-                } else if (type==='aws') {
-                    document.querySelectorAll('.aws-item').forEach(el=>el.value=el.options[0].value); 
-                    if(document.getElementById('aws-cons')) document.getElementById('aws-cons').value = 'ตื่น รู้ตัวดี';
-                    if(document.getElementById('aws-vs')) document.getElementById('aws-vs').value = '';
-                    if(document.getElementById('aws-med')) document.getElementById('aws-med').value = '';
-                    window.calcAws();
-                } else if (type==='braden') {
-                    document.querySelectorAll('.braden-item').forEach(el=>el.value=el.name==='friction'?"3":"4"); 
-                    document.getElementById('braden-loc').value = ''; document.getElementById('braden-size').value = '';
-                    document.getElementById('braden-stage').value = ''; document.getElementById('braden-qty').value = '';
-                    window.calcBraden();
                 }
             } catch(e) { console.error(e); showToast('บันทึกผิดพลาด', 'error'); }
         };
@@ -2519,12 +2389,16 @@
                 docsData.sort((a, b) => new Date(b.assessmentAt).getTime() - new Date(a.assessmentAt).getTime());
 
                 docsData.forEach(v => {
-                    let resStr = type==='class' ? `ประเภท ${v.category}` : (v.level || v.risk);
                     let color = 'text-slate-800';
                     let bgBadge = 'bg-slate-100/80 border border-slate-200/50 backdrop-blur-sm';
                     if (type === 'fall') { color = v.score >= 5 ? 'text-red-800' : (v.score >= 1 ? 'text-orange-800' : 'text-emerald-800'); bgBadge = v.score >= 5 ? 'bg-red-100/90 border-red-200/60 backdrop-blur-sm' : (v.score >= 1 ? 'bg-orange-100/90 border-orange-200/60 backdrop-blur-sm' : 'bg-emerald-100/90 border-emerald-200/60 backdrop-blur-sm');}
                     if (type === 'aws') { color = v.score >= 10 ? 'text-red-800' : (v.score >= 5 ? 'text-orange-800' : 'text-emerald-800'); bgBadge = v.score >= 10 ? 'bg-red-100/90 border-red-200/60 backdrop-blur-sm' : (v.score >= 5 ? 'bg-orange-100/90 border-orange-200/60 backdrop-blur-sm' : 'bg-emerald-100/90 border-emerald-200/60 backdrop-blur-sm');}
                     if (type === 'braden') { color = v.score <= 12 ? 'text-red-800' : (v.score <= 14 ? 'text-orange-800' : 'text-emerald-800'); bgBadge = v.score <= 12 ? 'bg-red-100/90 border-red-200/60 backdrop-blur-sm' : (v.score <= 14 ? 'bg-orange-100/90 border-orange-200/60 backdrop-blur-sm' : 'bg-emerald-100/90 border-emerald-200/60 backdrop-blur-sm');}
+
+                    let resStr = `<div class="font-black ${color}">${type==='class' ? `ประเภท ${v.category}` : (v.level || v.risk)}</div>`;
+                    if (type === 'aws' && v.medication) {
+                        resStr += `<div class="mt-1.5"><span class="text-[11px] text-blue-800 bg-blue-100/90 px-2.5 py-0.5 rounded-lg border border-blue-300/50 shadow-sm font-extrabold flex items-center gap-1.5 w-max backdrop-blur-sm"><span class="text-[14px] leading-none drop-shadow-sm">💊</span> ${v.medication}</span></div>`;
+                    }
 
                     const tr = document.createElement('tr');
                     tr.className = 'border-b border-white/30 hover:bg-white/60 transition-colors';
@@ -2536,7 +2410,7 @@
                         <td class="p-4 text-center">
                             <span class="inline-block px-3 py-1 rounded-full font-black shadow-sm ${bgBadge} ${color}">${v.score}</span>
                         </td>
-                        <td class="p-4 font-black ${color} drop-shadow-sm">${resStr}</td>
+                        <td class="p-4 drop-shadow-sm">${resStr}</td>
                         <td class="p-4 text-sm text-slate-700 font-bold flex items-center gap-1.5 drop-shadow-sm"><span class="icon-3d text-xs">🧑‍⚕️</span> ${v.assessor}</td>
                         <td class="p-4 text-right">
                             <button class="text-amber-700 bg-amber-50/80 hover:bg-amber-100/90 border border-amber-200/50 backdrop-blur-sm px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm" onclick="window.editAssessmentHistory('${type}', '${v.id}')">แก้ไข</button>
@@ -2547,20 +2421,130 @@
             });
         }
 
-        // --- PDF Print Placeholders ---
-        window.printPatientSummary = (type, pid) => {
-            showToast('กำลังเตรียมไฟล์ PDF...', 'info');
-            setTimeout(() => window.print(), 500);
+        // --- PDF Print Generators ---
+        window.printPatientSummary = async (type, pid) => {
+            if (!window.jspdf || !window.html2canvas) return showToast('กำลังโหลดไลบรารี PDF ลองใหม่อีกครั้ง', 'error');
+            showToast('กำลังประมวลผล PDF สรุป...', 'info');
+            try {
+                const pSnap = await getDoc(doc(db, `artifacts/${appId}/public/data/patients`, pid));
+                if(!pSnap.exists()) return showToast('ไม่พบข้อมูล', 'error');
+                const patient = pSnap.data();
+
+                const aSnap = await getDocs(collection(db, `artifacts/${appId}/public/data/patients/${pid}/${type}_assessments`));
+                const assessments = aSnap.docs.map(d => d.data()).sort((a,b) => new Date(a.assessmentAt).getTime() - new Date(b.assessmentAt).getTime());
+                if(assessments.length === 0) return showToast('ไม่มีประวัติการประเมิน', 'error');
+
+                const container = document.createElement('div');
+                container.style.cssText = "position:absolute; top:-9999px; left:0; width:800px; background:#fff; padding:40px; font-family:'Sarabun',sans-serif; color:#0f172a;";
+                const titles = { class: 'จำแนกประเภทผู้ป่วย', fall: 'ความเสี่ยงหกล้ม', aws: 'ถอนพิษสุรา (AWS)', braden: 'แผลกดทับ (Braden)' };
+                
+                let html = `<h2 style="text-align:center; font-size:24px; font-weight:bold;">สรุปประวัติ ${titles[type]}</h2>
+                <div style="background:#f8fafc; padding:15px; border:1px solid #cbd5e1; border-radius:8px; margin-bottom:20px; font-size:16px;">
+                    <strong>ชื่อ:</strong> ${patient.name} | <strong>HN:</strong> ${patient.hn} | <strong>เตียง:</strong> ${patient.bed||'-'}
+                </div>
+                <table style="width:100%; border-collapse:collapse; font-size:14px; text-align:center;">
+                    <tr style="background:#e2e8f0;"><th style="border:1px solid #cbd5e1; padding:10px;">วันที่ / เวลา</th><th style="border:1px solid #cbd5e1; padding:10px;">คะแนน</th><th style="border:1px solid #cbd5e1; padding:10px; text-align:left;">ผลลัพธ์</th><th style="border:1px solid #cbd5e1; padding:10px;">ผู้ประเมิน</th></tr>`;
+                
+                assessments.forEach(a => {
+                    let res = type === 'class' ? `ประเภท ${a.category}` : (a.level || a.risk);
+                    html += `<tr><td style="border:1px solid #cbd5e1; padding:10px;">${new Date(a.assessmentAt).toLocaleString('th-TH')}</td><td style="border:1px solid #cbd5e1; padding:10px; font-weight:bold;">${a.score}</td><td style="border:1px solid #cbd5e1; padding:10px; text-align:left;">${res}</td><td style="border:1px solid #cbd5e1; padding:10px;">${a.assessor}</td></tr>`;
+                });
+                
+                container.innerHTML = html + '</table>';
+                document.body.appendChild(container);
+                
+                const canvas = await html2canvas(container, {scale: 2, useCORS: true});
+                const pdfWidth = 210; const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+                const pdf = new window.jspdf.jsPDF('p', 'mm', 'a4');
+                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 10, pdfWidth, imgHeight);
+                pdf.save(`Summary_${type}_HN${patient.hn}.pdf`);
+                document.body.removeChild(container);
+                showToast('ดาวน์โหลด PDF สำเร็จ', 'success');
+            } catch(e) { console.error(e); showToast('เกิดข้อผิดพลาด', 'error'); }
         };
         
-        window.printDetailedPdf = (type, pid) => {
+        window.printDetailedPdf = async (type, pid) => {
+            if (!window.jspdf || !window.html2canvas) return showToast('กำลังโหลดไลบรารี PDF ลองใหม่อีกครั้ง', 'error');
             showToast('กำลังเตรียมประวัติละเอียด...', 'info');
-            setTimeout(() => window.print(), 500);
+            try {
+                const pSnap = await getDoc(doc(db, `artifacts/${appId}/public/data/patients`, pid));
+                if(!pSnap.exists()) return showToast('ไม่พบข้อมูล', 'error');
+                const patient = pSnap.data();
+
+                const aSnap = await getDocs(collection(db, `artifacts/${appId}/public/data/patients/${pid}/${type}_assessments`));
+                const assessments = aSnap.docs.map(d => d.data()).sort((a,b) => new Date(a.assessmentAt).getTime() - new Date(b.assessmentAt).getTime());
+                if(assessments.length === 0) return showToast('ไม่มีประวัติการประเมิน', 'error');
+
+                const container = document.createElement('div');
+                container.style.cssText = "position:absolute; top:-9999px; left:0; width:800px; background:#fff; padding:40px; font-family:'Sarabun',sans-serif; color:#0f172a;";
+                const titles = { class: 'จำแนกประเภทผู้ป่วย', fall: 'ความเสี่ยงหกล้ม', aws: 'ถอนพิษสุรา (AWS)', braden: 'แผลกดทับ (Braden)' };
+                
+                let html = `<h2 style="text-align:center; font-size:24px; font-weight:bold;">ประวัติละเอียด ${titles[type]}</h2>
+                <div style="background:#f8fafc; padding:15px; border:1px solid #cbd5e1; border-radius:8px; margin-bottom:20px; font-size:16px;">
+                    <strong>ชื่อ:</strong> ${patient.name} | <strong>HN:</strong> ${patient.hn} | <strong>เตียง:</strong> ${patient.bed||'-'}
+                </div>`;
+                
+                let dict = {}; let labels = {};
+                if(type === 'class') { dict = {...assessmentDicts.classAdult, ...assessmentDicts.classChild}; labels = {...fieldLabels.classAdult, ...fieldLabels.classChild}; }
+                else if(type === 'fall') { dict = assessmentDicts.fall; labels = fieldLabels.fall; }
+                else if(type === 'aws') { dict = assessmentDicts.aws; labels = fieldLabels.aws; }
+                else if(type === 'braden') { dict = assessmentDicts.braden; labels = fieldLabels.braden; }
+
+                assessments.forEach(a => {
+                    let res = type === 'class' ? `ประเภท ${a.category}` : (a.level || a.risk);
+                    html += `<div style="border:1px solid #cbd5e1; border-radius:8px; margin-bottom:15px;">
+                        <div style="background:#e2e8f0; padding:10px; border-bottom:1px solid #cbd5e1; display:flex; justify-content:space-between; font-weight:bold;">
+                            <span>${new Date(a.assessmentAt).toLocaleString('th-TH')} (เวร${a.shift||'-'})</span>
+                            <span style="color:#1d4ed8;">คะแนน: ${a.score} | ผลลัพธ์: ${res}</span>
+                        </div>
+                        <div style="padding:15px; font-size:13px;">
+                            <div style="margin-bottom:8px;"><strong>ผู้ประเมิน:</strong> ${a.assessor}</div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">`;
+                    if(a.details) {
+                        for(let k in a.details) {
+                            let labelName = labels[k] || k;
+                            if (type === 'class') labelName = (a.mode === 'adult' ? fieldLabels.classAdult : fieldLabels.classChild)[k] || k;
+                            let val = a.details[k];
+                            if(type === 'fall') val = val.includes('-') ? val.split('-')[1].trim() : val;
+                            else if (dict[k] && dict[k][val]) val = dict[k][val].replace(/\([^)]+\)/g, '').trim(); 
+                            html += `<div><strong>${labelName}:</strong> <span style="color:#475569;">${val}</span></div>`;
+                        }
+                    }
+                    if(type === 'aws') html += `<div style="grid-column:span 2; margin-top:8px; border-top:1px dashed #cbd5e1; padding-top:8px;"><strong>ยาที่ให้:</strong> ${a.medication||'-'} | <strong>V/S:</strong> ${a.vitals||'-'} | <strong>ระดับความรู้สึกตัว:</strong> ${a.consciousness||'-'}</div>`;
+                    if(type === 'braden' && (a.ulcerLoc||a.ulcerStage)) html += `<div style="grid-column:span 2; margin-top:8px; border-top:1px dashed #cbd5e1; padding-top:8px; color:#b91c1c;"><strong>แผลกดทับ:</strong> ตำแหน่ง ${a.ulcerLoc||'-'} | ขนาด ${a.ulcerSize||'-'} | ระดับ ${a.ulcerStage||'-'} | จำนวน ${a.ulcerQty||'-'}</div>`;
+                    html += `</div></div></div>`;
+                });
+                
+                container.innerHTML = html;
+                document.body.appendChild(container);
+                
+                const canvas = await html2canvas(container, {scale: 2, useCORS: true});
+                const pdfWidth = 210; const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+                const pdf = new window.jspdf.jsPDF('p', 'mm', [pdfWidth, Math.max(297, imgHeight+20)]);
+                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 10, pdfWidth, imgHeight);
+                pdf.save(`Detailed_${type}_HN${patient.hn}.pdf`);
+                document.body.removeChild(container);
+                showToast('ดาวน์โหลด PDF สำเร็จ', 'success');
+            } catch(e) { console.error(e); showToast('เกิดข้อผิดพลาด', 'error'); }
         };
 
-        window.printCpgPdf = () => { window.print(); };
-        window.printCpgPiPdf = () => { window.print(); };
-        window.printCpgFallPdf = () => { window.print(); };
+        const printCpgGeneric = async (id, filename) => {
+            if (!window.jspdf || !window.html2canvas) return showToast('กำลังโหลดไลบรารี PDF', 'error');
+            const el = document.getElementById(id);
+            showToast('กำลังสร้าง PDF คู่มือ...', 'info');
+            try {
+                const canvas = await html2canvas(el, {scale: 2, useCORS: true, backgroundColor: '#ffffff'});
+                const pdfWidth = 210; const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+                const pdf = new window.jspdf.jsPDF('p', 'mm', [pdfWidth, Math.max(297, imgHeight + 10)]);
+                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 5, pdfWidth, imgHeight);
+                pdf.save(filename);
+                showToast('ดาวน์โหลด PDF คู่มือสำเร็จ', 'success');
+            } catch(e) { console.error(e); showToast('เกิดข้อผิดพลาด', 'error'); }
+        };
+
+        window.printCpgPdf = () => printCpgGeneric('cpg-content-container', 'CPG_AWS.pdf');
+        window.printCpgPiPdf = () => printCpgGeneric('cpg-pi-content-container', 'CPG_Pressure_Injury.pdf');
+        window.printCpgFallPdf = () => printCpgGeneric('cpg-fall-content-container', 'CPG_Fall_Risk.pdf');
 
         // --- Countdown Timer Logic ---
         setInterval(() => {
@@ -2579,13 +2563,14 @@
                 } else {
                     const hours = Math.floor(distance / (1000 * 60 * 60));
                     const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
                     
                     let colorClass = 'text-green-800 bg-green-100/80 backdrop-blur-sm border border-green-200/60 px-3 py-1.5 rounded-lg font-bold shadow-sm';
-                    if (distance < 30 * 60 * 1000) { // ถ้าน้อยกว่า 30 นาที ให้กระพริบสีส้มเตือน
+                    if (distance < 30 * 60 * 1000) { 
                         colorClass = 'text-orange-800 bg-orange-100/90 backdrop-blur-sm border border-orange-300/60 px-3 py-1.5 rounded-lg font-black shadow-md animate-pulse';
                     }
 
-                    cell.innerHTML = `<span class="${colorClass}">${hours}ชม. ${String(minutes).padStart(2,'0')}น.</span>`;
+                    cell.innerHTML = `<span class="${colorClass}">${hours}ชม. ${String(minutes).padStart(2,'0')}น. ${String(seconds).padStart(2,'0')}วิ.</span>`;
                 }
             });
         }, 1000);
