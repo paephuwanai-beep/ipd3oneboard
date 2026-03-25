@@ -2114,8 +2114,7 @@
             let risk = '', colorClass = '', recs = [];
             if (score >= 5) { 
                 risk = 'เสี่ยงหกล้มสูง (High Risk)'; colorClass = 'info-red border-red-300/50'; 
-                recs = ['<span class="icon-3d text-2xl drop-shadow-sm">🛏️</span> ยกไม้กั้นเตียงขึ้น 2 ข้างตลอดเวลา','<span class="icon-3d text-2xl drop-shadow-sm">🛑</span> แขวนป้ายเตือนสีแดงที่เตียงผู้ป่วย','<span class="icon-3d text-2xl drop-shadow-sm">👀</span> ให้ญาติเฝ้าระวังดูแลอย่างใกล้ชิดตลอด 24 ชม.','<span class="icon-3d text-2xl drop-
-                        window.calcFall = () => {
+                recs = ['<span class="icon-3d text-2xl drop-shadow-sm">🛏️</span> ยกไม้กั้นเตียงขึ้น 2 ข้างตลอดเวลา','<span class="icon-3d text-2xl drop-shadow-sm">🛑</span> แขวนป้ายเตือนสีแดงที่เตียงผู้ป่วย','<span class="icon-3d text-2xl drop-shadow-sm">👀</span> ให้ญาติเฝ้าระวังดูแลอย่างใกล้ชิดตลอด 24 ชม.','<span class="icon-3d text-2xl drop-window.calcFall = () => {
             let score = 0; document.querySelectorAll(`.fall-item`).forEach(el => score += (parseInt(el.value.split(' - ')[0]) || 0));
             let risk = '', colorClass = '', recs = [];
             if (score >= 5) { 
